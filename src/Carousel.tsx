@@ -202,7 +202,7 @@
 // const ITEM_WIDTH = SCREEN_WIDTH - 100
 
 // console.log('ITEM_WIDTH: ', ITEM_WIDTH) // 411.42857142857144
-// const fakeCount = 3
+// const FAKE_COUNT = 3
 // export const Carousel = () => {
 //   const [list, setList] = useState([
 //     // { id: '4-fake', image: require('./image/2.webp') },
@@ -233,14 +233,14 @@
 //     // scroll to end
 //     if (index === -1) {
 //       ref.current?.scrollTo({
-//         x: ITEM_WIDTH * (list.length - fakeCount) + (list.length - fakeCount) * 20,
+//         x: ITEM_WIDTH * (list.length - FAKE_COUNT) + (list.length - FAKE_COUNT) * 20,
 //         y: 0,
 //         animated: false,
 //       })
 //     }
 
 //     // scroll to start
-//     if (index === list.length - fakeCount) {
+//     if (index === list.length - FAKE_COUNT) {
 //       ref.current?.scrollTo({ x: ITEM_WIDTH + 20, y: 0, animated: false })
 //     }
 //   }, 50)
@@ -339,8 +339,8 @@
 
 // console.log('SCREEN_WIDTH: ', SCREEN_WIDTH) // 390
 
-// const fakeCount = 4
-// const fakePerSide = fakeCount / 2
+// const FAKE_COUNT = 4
+// const FAKE_PER_SIDE = FAKE_COUNT / 2
 // const marginHorizontal = 10
 
 // const generateFakeItems = (count: number) => {
@@ -371,7 +371,7 @@
 
 //     const x =
 //       Number(nativeEvent.contentOffset.x.toFixed(2)) -
-//       Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * fakePerSide
+//       Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
 //     const index = Math.round(x / ITEM_WIDTH)
 //     console.log('index: ', index)
 
@@ -379,8 +379,8 @@
 //     if (index > initialList.length - 1) {
 //       ref.current?.scrollTo({
 //         x:
-//           ITEM_WIDTH * (initialList.length - index + fakePerSide) +
-//           (initialList.length - index + fakePerSide) * 20,
+//           ITEM_WIDTH * (initialList.length - index + FAKE_PER_SIDE) +
+//           (initialList.length - index + FAKE_PER_SIDE) * 20,
 //         y: 0,
 //         animated: false,
 //       })
@@ -390,8 +390,8 @@
 //     if (index <= -1) {
 //       ref.current?.scrollTo({
 //         x:
-//           ITEM_WIDTH * (initialList.length + index + fakePerSide) +
-//           (initialList.length + index + fakePerSide) * 20,
+//           ITEM_WIDTH * (initialList.length + index + FAKE_PER_SIDE) +
+//           (initialList.length + index + FAKE_PER_SIDE) * 20,
 //         y: 0,
 //         animated: false,
 //       })
@@ -422,12 +422,12 @@
 //           if (Platform.OS === 'ios') {
 //             const x =
 //               Number(nativeEvent.contentOffset.x.toFixed(2)) -
-//               Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * fakePerSide
+//               Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
 //             const index = Math.round(x / ITEM_WIDTH)
 //             console.log('index: ', index)
 
 //             ref.current?.scrollTo({
-//               x: ITEM_WIDTH * (index + fakePerSide) + (index + fakePerSide) * 20,
+//               x: ITEM_WIDTH * (index + FAKE_PER_SIDE) + (index + FAKE_PER_SIDE) * 20,
 //               y: 0,
 //               animated: true,
 //             })
@@ -527,8 +527,8 @@ const ITEM_WIDTH = SCREEN_WIDTH - 100
 
 // console.log('SCREEN_WIDTH: ', SCREEN_WIDTH) // 390
 
-const fakeCount = 4
-const fakePerSide = fakeCount / 2
+const FAKE_COUNT = 4
+export const FAKE_PER_SIDE = FAKE_COUNT / 2
 const marginHorizontal = 10
 
 const generateFakeItems = (count: number) => {
@@ -549,7 +549,11 @@ export const Carousel = () => {
   const ref = useRef<ScrollView>(null)
   const isDrag = useRef<boolean>(false)
 
-  const { dotsStyles } = useScrollDotsInterpolatedStyles(initialList.length, ITEM_WIDTH, scrolling)
+  const { dotsStyles } = useScrollDotsInterpolatedStyles(
+    initialList.length,
+    ITEM_WIDTH + marginHorizontal * 2,
+    scrolling
+  )
 
   const debounceScrollHandle = debounce((nativeEvent: NativeScrollEvent) => {
     scrollHandle(nativeEvent)
@@ -560,7 +564,7 @@ export const Carousel = () => {
 
     const x =
       Number(nativeEvent.contentOffset.x.toFixed(2)) -
-      Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * fakePerSide
+      Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
     const index = Math.round(x / ITEM_WIDTH)
     console.log('index: ', index)
 
@@ -568,8 +572,8 @@ export const Carousel = () => {
     if (index > initialList.length - 1) {
       ref.current?.scrollTo({
         x:
-          ITEM_WIDTH * (initialList.length - index + fakePerSide) +
-          (initialList.length - index + fakePerSide) * 20,
+          ITEM_WIDTH * (initialList.length - index + FAKE_PER_SIDE) +
+          (initialList.length - index + FAKE_PER_SIDE) * 20,
         y: 0,
         animated: false,
       })
@@ -579,8 +583,8 @@ export const Carousel = () => {
     if (index <= -1) {
       ref.current?.scrollTo({
         x:
-          ITEM_WIDTH * (initialList.length + index + fakePerSide) +
-          (initialList.length + index + fakePerSide) * 20,
+          ITEM_WIDTH * (initialList.length + index + FAKE_PER_SIDE) +
+          (initialList.length + index + FAKE_PER_SIDE) * 20,
         y: 0,
         animated: false,
       })
@@ -608,13 +612,13 @@ export const Carousel = () => {
       //   console.log('scrolling.current: ', scrolling.current._value)
       const x =
         Number(scrolling.current._value) -
-        Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * fakePerSide
+        Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
       const index = Math.round(x / ITEM_WIDTH) + 1
 
       //   console.log('index: ', index)
       console.log('AUTOPLAY')
       ref.current?.scrollTo({
-        x: ITEM_WIDTH * (index + fakePerSide) + (index + fakePerSide) * 20,
+        x: ITEM_WIDTH * (index + FAKE_PER_SIDE) + (index + FAKE_PER_SIDE) * 20,
         y: 0,
         animated: true,
       })
@@ -631,7 +635,7 @@ export const Carousel = () => {
     startAutoPlay(2000)
   }
   return (
-    <>
+    <View style={styles.wrapper}>
       <ScrollView
         bounces={false}
         contentOffset={{ x: ITEM_WIDTH * 2 + marginHorizontal * 4, y: 0 }}
@@ -642,7 +646,7 @@ export const Carousel = () => {
         snapToInterval={ITEM_WIDTH + marginHorizontal * 2}
         decelerationRate='fast'
         ref={ref}
-        persistentScrollbar
+        showsHorizontalScrollIndicator={false}
         onScrollBeginDrag={({ nativeEvent }) => {
           console.log('onScrollBeginDrag: ')
           isDrag.current = true
@@ -654,12 +658,12 @@ export const Carousel = () => {
           if (Platform.OS === 'ios') {
             const x =
               Number(nativeEvent.contentOffset.x.toFixed(2)) -
-              Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * fakePerSide
+              Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
             const index = Math.round(x / ITEM_WIDTH)
             console.log('index: ', index)
 
             ref.current?.scrollTo({
-              x: ITEM_WIDTH * (index + fakePerSide) + (index + fakePerSide) * 20,
+              x: ITEM_WIDTH * (index + FAKE_PER_SIDE) + (index + FAKE_PER_SIDE) * 20,
               y: 0,
               animated: true,
             })
@@ -686,11 +690,7 @@ export const Carousel = () => {
             key={item.id}
           >
             <View style={styles.slider}>
-              <Image
-                source={item.image}
-                style={{ borderRadius: 20, width: ITEM_WIDTH }}
-                resizeMode='contain'
-              />
+              <Image source={item.image} style={{ borderRadius: 20, width: ITEM_WIDTH }} />
             </View>
           </View>
         ))}
@@ -703,19 +703,23 @@ export const Carousel = () => {
           </TouchableOpacity>
         ))}
       </View>
-    </>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    marginTop: 100,
+  },
   sliderWrapper: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    // backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
     width: ITEM_WIDTH,
+    // height: 300
   },
   slider: {
-    backgroundColor: 'red',
+    // backgroundColor: 'red',
   },
   dotsContainer: {
     flexDirection: 'row',
