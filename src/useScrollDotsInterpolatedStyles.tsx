@@ -5,23 +5,69 @@ export const getInterpolator =
   (animatedValue: Animated.Value, slideWidth: number, slidesCount: number) =>
   (slideItemIndex: number, minValue: number, maxValue: number): Animated.AnimatedInterpolation => {
     const lastIndex = slidesCount + FAKE_PER_SIDE - 1
-
     const inputRange = [...Array(slidesCount + FAKE_PER_SIDE)].map((_, i) => (i + 1) * slideWidth)
 
-    const rest = [...Array(slidesCount - FAKE_PER_SIDE)].map(() => minValue)
+    const arr = [...Array(FAKE_PER_SIDE + slidesCount)]
+
+    arr[arr.length - 1] = maxValue
+    arr[FAKE_PER_SIDE - 1] = maxValue
+
+    for (let i = FAKE_PER_SIDE - 1; i >= 0; i -= 2) {
+      arr[i] = maxValue
+    }
+
+    const firstImageOutput = arr.map((item) => {
+      if (item === undefined) return minValue
+      return item
+    })
+
+    const lastImageTemp = [...firstImageOutput]
+    lastImageTemp.push(minValue)
+    const lastImageOutput = lastImageTemp.slice(1)
+
+    // case FAKE_PER_SIDE:
+    //   return animatedValue.interpolate({
+    //     inputRange,
+    //     outputRange: [minValue, maxValue, minValue, minValue, minValue, maxValue],
+    //     extrapolate: 'clamp',
+    //   })
+
+    // case lastIndex:
+    //   return animatedValue.interpolate({
+    //     inputRange,
+    //     outputRange: [maxValue, minValue, minValue, minValue, maxValue, minValue],
+    //     extrapolate: 'clamp',
+    //   })
+
+    // case FAKE_PER_SIDE:
+    //   return animatedValue.interpolate({
+    //     inputRange,
+    //     outputRange: [maxValue, minValue, maxValue, minValue, minValue, minValue, maxValue],
+    //     extrapolate: 'clamp',
+    //   })
+
+    // case lastIndex:
+    //   return animatedValue.interpolate({
+    //     inputRange,
+    //     outputRange: [minValue, maxValue, minValue, minValue, minValue, maxValue, minValue],
+    //     extrapolate: 'clamp',
+    //   })
+
+    // case lastIndex for 8
+    // outputRange: [maxValue, minValue, maxValue, minValue, minValue, minValue, maxValue, minValue],
 
     switch (slideItemIndex) {
       case FAKE_PER_SIDE:
         return animatedValue.interpolate({
           inputRange,
-          outputRange: [minValue, maxValue, ...rest, minValue, maxValue],
+          outputRange: firstImageOutput,
           extrapolate: 'clamp',
         })
 
       case lastIndex:
         return animatedValue.interpolate({
           inputRange,
-          outputRange: [maxValue, minValue, ...rest, maxValue, minValue],
+          outputRange: lastImageOutput,
           extrapolate: 'clamp',
         })
 

@@ -1,4 +1,5 @@
 import { Animated } from 'react-native'
+import { FAKE_PER_SIDE } from './Carousel'
 
 export const getImageInterpolator =
   (animatedValue: Animated.Value, slideWidth: number) =>
@@ -20,7 +21,8 @@ export const useScrollImageInterpolatedStyles = (
     image: any
   }[],
   slideWidth: number,
-  scrollEvent: React.MutableRefObject<Animated.Value>
+  scrollEvent: React.MutableRefObject<Animated.Value>,
+  translate: undefined | number
 ) => {
   const slidesCount = list.length
   const imageStyles = Array(slidesCount)
@@ -30,18 +32,19 @@ export const useScrollImageInterpolatedStyles = (
   for (let i = 0; i < slidesCount; i += 1) {
     imageStyles[i] = {
       style: {
-        opacity: interpolate(i, 0.6, 1),
+        opacity: translate && translate === i ? 1 : interpolate(i, 0.6, 1),
         transform: [
           {
-            translateY: interpolate(i, 0, -25),
+            translateY: translate && translate === i ? -25 : interpolate(i, 0, -25),
           },
-          //   {
-          //     rotateZ: interpolate(i, '-50deg', '0deg'),
-          //   },
-          //   {
-          //     rotateX: interpolate(i, '50deg', '0deg'),
-          //   },
         ],
+
+        // opacity: interpolate(i, 0.6, 1),
+        // transform: [
+        //   {
+        //     translateY: interpolate(i, 0, -25),
+        //   },
+        // ],
       },
       image: list[i],
     }

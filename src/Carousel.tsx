@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Platform,
   TouchableOpacity,
+  InteractionManager,
 } from 'react-native'
 import { debounce } from 'lodash'
 import { useScrollDotsInterpolatedStyles } from './useScrollDotsInterpolatedStyles'
@@ -26,6 +27,7 @@ const initialList = [
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const ITEM_WIDTH = Math.round(SCREEN_WIDTH - 100)
+console.log('ITEM_WIDTH: ', ITEM_WIDTH)
 const FAKE_COUNT = 4
 const SLIDE_INTERVAL = 2000
 const SLIDE_INTERACTION_DELAY = 4000
@@ -46,8 +48,10 @@ export const Carousel = () => {
   const scrolling = useRef(new Animated.Value(0))
   const intervalId = useRef<number | null>(null)
   const intervalDelayId = useRef<number | null>(null)
+  const isScrolling = useRef(false)
+  const [translate, setTranslate] = useState<undefined | number>(undefined)
 
-  const [list, setList] = useState(generateFakeItems(2))
+  const [list, setList] = useState(generateFakeItems(FAKE_PER_SIDE))
 
   const ref = useRef<ScrollView>(null)
   const isDrag = useRef<boolean>(false)
@@ -60,7 +64,8 @@ export const Carousel = () => {
   const { imageStyles } = useScrollImageInterpolatedStyles(
     list,
     ITEM_WIDTH + sumMarginHorizontal,
-    scrolling
+    scrolling,
+    translate
   )
 
   const debounceScrollHandle = debounce((nativeEvent: NativeScrollEvent) => {
@@ -68,38 +73,47 @@ export const Carousel = () => {
   }, 50)
 
   const scrollHandle = (nativeEvent: NativeScrollEvent) => {
-    if (isDrag.current === true) return
+    isScrolling.current = false
 
+    if (isDrag.current === true) return
     const x =
       Number(nativeEvent.contentOffset.x.toFixed(2)) -
-      Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
+      (Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) + sumMarginHorizontal) * FAKE_PER_SIDE
     const index = Math.round(x / ITEM_WIDTH)
-    console.log('index: ', index)
 
     // scroll to start
     if (index > initialList.length - 1) {
-      setTimeout(() => {
-        ref.current?.scrollTo({
-          x:
-            ITEM_WIDTH * (initialList.length - index + FAKE_PER_SIDE) +
-            (initialList.length - index + FAKE_PER_SIDE) * sumMarginHorizontal,
-          y: 0,
-          animated: false,
-        })
-      }, 100)
+      isScrolling.current = true
+      // FAKE_PER_SIDE - simple way
+      const toIndex = FAKE_PER_SIDE + initialList.length - index
+
+      setTranslate(toIndex)
+
+      console.log('To_start: ', toIndex)
+      console.log('index_start: ', index)
+
+      ref.current?.scrollTo({
+        x: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal,
+        y: 0,
+        animated: false,
+      })
+
       return
     }
     // scroll to end
     if (index <= -1) {
-      setTimeout(() => {
-        ref.current?.scrollTo({
-          x:
-            ITEM_WIDTH * (initialList.length + index + FAKE_PER_SIDE) +
-            (initialList.length + index + FAKE_PER_SIDE) * sumMarginHorizontal,
-          y: 0,
-          animated: false,
-        })
-      }, 100)
+      isScrolling.current = true
+
+      const toIndex = initialList.length + index + FAKE_PER_SIDE
+      console.log('To_end: ', toIndex)
+      console.log('index_end: ', index)
+      setTranslate(toIndex)
+
+      ref.current?.scrollTo({
+        x: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal,
+        y: 0,
+        animated: false,
+      })
       return
     }
   }
@@ -125,19 +139,19 @@ export const Carousel = () => {
   }
 
   const startAutoPlay = (delay: number = 0) => {
-    intervalDelayId.current = setTimeout(() => {
-      intervalId.current = setInterval(() => {
-        const x =
-          Number(scrolling.current._value) -
-          Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
-        const index = Math.round(x / ITEM_WIDTH) + 1
-        ref.current?.scrollTo({
-          x: ITEM_WIDTH * (index + FAKE_PER_SIDE) + (index + FAKE_PER_SIDE) * 20,
-          y: 0,
-          animated: true,
-        })
-      }, SLIDE_INTERVAL)
-    }, delay)
+    // intervalDelayId.current = setTimeout(() => {
+    //   intervalId.current = setInterval(() => {
+    //     const x =
+    //       Number(scrolling.current._value) -
+    //       Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
+    //     const index = Math.round(x / ITEM_WIDTH) + 1
+    //     ref.current?.scrollTo({
+    //       x: ITEM_WIDTH * (index + FAKE_PER_SIDE) + (index + FAKE_PER_SIDE) * 20,
+    //       y: 0,
+    //       animated: true,
+    //     })
+    //   }, SLIDE_INTERVAL)
+    // }, delay)
   }
 
   const scrollToIndex = (toIndex: number) => () => {
@@ -149,13 +163,17 @@ export const Carousel = () => {
     })
     startAutoPlay(SLIDE_INTERACTION_DELAY)
   }
+
   return (
     <View style={styles.wrapper}>
       <View>
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           bounces={false}
-          contentOffset={{ x: ITEM_WIDTH * 2 + sumMarginHorizontal * 2, y: 0 }}
+          contentOffset={{
+            x: ITEM_WIDTH * FAKE_PER_SIDE + sumMarginHorizontal * FAKE_PER_SIDE,
+            y: 0,
+          }}
           horizontal
           disableIntervalMomentum
           scrollEventThrottle={16}
@@ -187,6 +205,9 @@ export const Carousel = () => {
             startAutoPlay(SLIDE_INTERACTION_DELAY)
           }}
           onScroll={({ nativeEvent }) => {
+            if (isScrolling.current === false && translate) {
+              setTranslate(undefined)
+            }
             scrolling.current.setValue(nativeEvent.contentOffset.x)
             debounceScrollHandle(nativeEvent)
           }}
@@ -200,6 +221,7 @@ export const Carousel = () => {
                   marginRight: i === list.length - 1 ? 50 : marginHorizontal,
                 },
                 style,
+                // translate && i === 2 && { opacity: 1, transform: [{ translateY: -25 }] },
               ]}
               key={image.id}
             >
