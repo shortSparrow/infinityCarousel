@@ -2,17 +2,41 @@ import { Animated } from 'react-native'
 import { FAKE_PER_SIDE } from './Carousel'
 
 export const getInterpolator =
-  (animatedValue: Animated.Value, deltaWidth: number) =>
-  (slideItemIndex: number, outputRange: [number, number, number]): Animated.AnimatedInterpolation =>
-    animatedValue.interpolate({
-      inputRange: [
-        (slideItemIndex - 1) * deltaWidth,
-        slideItemIndex * deltaWidth,
-        (slideItemIndex + 1) * deltaWidth,
-      ],
-      outputRange,
-      extrapolate: 'clamp',
-    })
+  (animatedValue: Animated.Value, slideWidth: number, slidesCount: number) =>
+  (slideItemIndex: number, minValue: number, maxValue: number): Animated.AnimatedInterpolation => {
+    const lastIndex = slidesCount + FAKE_PER_SIDE - 1
+
+    const inputRange = [...Array(slidesCount + FAKE_PER_SIDE)].map((_, i) => (i + 1) * slideWidth)
+
+    const rest = [...Array(slidesCount - FAKE_PER_SIDE)].map(() => minValue)
+
+    switch (slideItemIndex) {
+      case FAKE_PER_SIDE:
+        return animatedValue.interpolate({
+          inputRange,
+          outputRange: [minValue, maxValue, ...rest, minValue, maxValue],
+          extrapolate: 'clamp',
+        })
+
+      case lastIndex:
+        return animatedValue.interpolate({
+          inputRange,
+          outputRange: [maxValue, minValue, ...rest, maxValue, minValue],
+          extrapolate: 'clamp',
+        })
+
+      default:
+        return animatedValue.interpolate({
+          inputRange: [
+            (slideItemIndex - 1) * slideWidth,
+            slideItemIndex * slideWidth,
+            (slideItemIndex + 1) * slideWidth,
+          ],
+          outputRange: [minValue, maxValue, minValue],
+          extrapolate: 'clamp',
+        })
+    }
+  }
 
 export const useScrollDotsInterpolatedStyles = (
   slidesCount: number,
@@ -21,36 +45,17 @@ export const useScrollDotsInterpolatedStyles = (
 ) => {
   const dotsStyles = Array<any>(slidesCount)
 
-  const interpolate = getInterpolator(scrollEvent.current, slideWidth)
+  const interpolate = getInterpolator(scrollEvent.current, slideWidth, slidesCount)
 
   for (let i = FAKE_PER_SIDE; i < slidesCount + FAKE_PER_SIDE; i += 1) {
-    // dotsStyles[i] = {
-    // //   transform: [
-    // //     {
-    // //       scale: interpolate(i, [1, 1.2, 1]),
-    // //     },
-    // //   ],
-    //   opacity: interpolate(i, [0.4, 1, 0.4]),
-    // }
-  }
-
-  dotsStyles[2] = {
-    // opacity: interpolate(2, [0.4, 1, 0.4]),
-    opacity: scrollEvent.current.interpolate({
-      inputRange: [1 * slideWidth, 2 * slideWidth, 3 * slideWidth, 4 * slideWidth, 5 * slideWidth],
-      outputRange: [0.4, 1, 0.4, 0.4, 1],
-      extrapolate: 'clamp',
-    }),
-  }
-  dotsStyles[3] = {
-    opacity: interpolate(3, [0.4, 1, 0.4]),
-  }
-  dotsStyles[4] = {
-    opacity: scrollEvent.current.interpolate({
-      inputRange: [1 * slideWidth, 2 * slideWidth, 3 * slideWidth, 4 * slideWidth, 5 * slideWidth],
-      outputRange: [1, 0.4, 0.4, 1, 0.4],
-      extrapolate: 'clamp',
-    }),
+    dotsStyles[i] = {
+      transform: [
+        {
+          scale: interpolate(i, 1, 1.2),
+        },
+      ],
+      opacity: interpolate(i, 0.4, 1),
+    }
   }
 
   return {

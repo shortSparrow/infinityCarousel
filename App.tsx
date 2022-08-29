@@ -4,7 +4,7 @@ import { Carousel } from './src/Carousel'
 
 const App = () => {
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ flex: 1 }}>
       <Carousel />
     </SafeAreaView>
   )
