@@ -87,11 +87,11 @@ export const getInterpolator =
 export const useScrollDotsInterpolatedStyles = (
   slidesCount: number,
   slideWidth: number,
-  scrollEvent: React.MutableRefObject<Animated.Value>
+  scrollEvent: Animated.Value
 ) => {
   const dotsStyles = Array<any>(slidesCount)
 
-  const interpolate = getInterpolator(scrollEvent.current, slideWidth, slidesCount)
+  const interpolate = getInterpolator(scrollEvent, slideWidth, slidesCount)
 
   for (let i = FAKE_PER_SIDE; i < slidesCount + FAKE_PER_SIDE; i += 1) {
     dotsStyles[i] = {

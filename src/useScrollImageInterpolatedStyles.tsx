@@ -1,4 +1,4 @@
-import { Animated } from 'react-native'
+import { Animated, Easing } from 'react-native'
 
 export const getImageInterpolator =
   (animatedValue: Animated.Value, slideWidth: number) =>
@@ -11,6 +11,7 @@ export const getImageInterpolator =
       ],
       outputRange: [minValue, maxValue, minValue],
       extrapolate: 'clamp',
+      // easing: Easing.exp
     })
   }
 
@@ -20,13 +21,13 @@ export const useScrollImageInterpolatedStyles = (
     image: any
   }[],
   slideWidth: number,
-  scrollEvent: React.MutableRefObject<Animated.Value>,
+  scrollEvent: Animated.Value,
   translate: undefined | number
 ) => {
   const slidesCount = list.length
   const imageStyles = Array(slidesCount)
 
-  const interpolate = getImageInterpolator(scrollEvent.current, slideWidth)
+  const interpolate = getImageInterpolator(scrollEvent, slideWidth)
 
   for (let i = 0; i < slidesCount; i += 1) {
     imageStyles[i] = {
@@ -52,6 +53,23 @@ export const useScrollImageInterpolatedStyles = (
         //   },
         // ],
         // zIndex: translate && translate === i ? 1 : interpolate(i, 0, 1),
+
+        // // varian 4 (ios)
+        // transform: [
+        //   {
+        //     skewY: translate && translate === i ? '0deg' : interpolate(i, '-45deg', '0deg'),
+        //   },
+        // ],
+
+         // // varian 4 (android)
+        //  transform: [
+        //   {
+        //     skewY: translate && translate === i ? '0deg' : interpolate(i, '-45deg', '0deg'),
+        //   },
+        //   {
+        //     rotate: translate && translate === i ? '0deg' : interpolate(i, '45deg', '0deg'),
+        //   },
+        // ],
       },
       image: list[i],
     }
