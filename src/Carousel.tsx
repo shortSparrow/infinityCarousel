@@ -9,7 +9,6 @@ import {
   StyleSheet,
   Platform,
   TouchableOpacity,
-  InteractionManager,
 } from 'react-native'
 import { debounce } from 'lodash'
 import { useScrollDotsInterpolatedStyles } from './useScrollDotsInterpolatedStyles'
@@ -19,16 +18,14 @@ const initialList = [
   { id: '1', image: require('./image/1.jpeg') },
   { id: '2', image: require('./image/2.webp') },
   { id: '3', image: require('./image/3.jpeg') },
-
   { id: '4', image: require('./image/4.jpeg') },
-  //   { id: '5', image: require('./image/2.webp') },
-  //   { id: '6', image: require('./image/3.jpeg') },
 ]
 
+const MAGIC_COEF = 0.1 // need for android. Try to fix
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const ITEM_WIDTH = Math.round(SCREEN_WIDTH - 100)
 console.log('ITEM_WIDTH: ', ITEM_WIDTH)
-const FAKE_COUNT = 4
+const FAKE_COUNT = 6
 const SLIDE_INTERVAL = 2000
 const SLIDE_INTERACTION_DELAY = 4000
 export const FAKE_PER_SIDE = FAKE_COUNT / 2
@@ -85,12 +82,8 @@ export const Carousel = () => {
     if (index > initialList.length - 1) {
       isScrolling.current = true
       // FAKE_PER_SIDE - simple way
-      const toIndex = FAKE_PER_SIDE + initialList.length - index
-
+      const toIndex = FAKE_PER_SIDE + index - initialList.length
       setTranslate(toIndex)
-
-      console.log('To_start: ', toIndex)
-      console.log('index_start: ', index)
 
       ref.current?.scrollTo({
         x: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal,
@@ -103,10 +96,7 @@ export const Carousel = () => {
     // scroll to end
     if (index <= -1) {
       isScrolling.current = true
-
       const toIndex = initialList.length + index + FAKE_PER_SIDE
-      console.log('To_end: ', toIndex)
-      console.log('index_end: ', index)
       setTranslate(toIndex)
 
       ref.current?.scrollTo({
@@ -139,19 +129,19 @@ export const Carousel = () => {
   }
 
   const startAutoPlay = (delay: number = 0) => {
-    // intervalDelayId.current = setTimeout(() => {
-    //   intervalId.current = setInterval(() => {
-    //     const x =
-    //       Number(scrolling.current._value) -
-    //       Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
-    //     const index = Math.round(x / ITEM_WIDTH) + 1
-    //     ref.current?.scrollTo({
-    //       x: ITEM_WIDTH * (index + FAKE_PER_SIDE) + (index + FAKE_PER_SIDE) * 20,
-    //       y: 0,
-    //       animated: true,
-    //     })
-    //   }, SLIDE_INTERVAL)
-    // }, delay)
+    intervalDelayId.current = setTimeout(() => {
+      intervalId.current = setInterval(() => {
+        const x =
+          Number(scrolling.current._value) -
+          Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
+        const index = Math.round(x / ITEM_WIDTH) + 1
+        ref.current?.scrollTo({
+          x: ITEM_WIDTH * (index + FAKE_PER_SIDE) + (index + FAKE_PER_SIDE) * 20,
+          y: 0,
+          animated: true,
+        })
+      }, SLIDE_INTERVAL)
+    }, delay)
   }
 
   const scrollToIndex = (toIndex: number) => () => {
@@ -178,7 +168,7 @@ export const Carousel = () => {
           disableIntervalMomentum
           scrollEventThrottle={16}
           disableScrollViewPanResponder
-          snapToInterval={ITEM_WIDTH + sumMarginHorizontal + 0.1}
+          snapToInterval={ITEM_WIDTH + sumMarginHorizontal + MAGIC_COEF}
           decelerationRate='fast'
           ref={ref}
           showsHorizontalScrollIndicator={false}
@@ -216,17 +206,17 @@ export const Carousel = () => {
             <Animated.View
               style={[
                 styles.sliderWrapper,
+                styles.shadow,
                 {
                   marginLeft: i === 0 ? 50 : marginHorizontal,
                   marginRight: i === list.length - 1 ? 50 : marginHorizontal,
                 },
                 style,
-                // translate && i === 2 && { opacity: 1, transform: [{ translateY: -25 }] },
               ]}
               key={image.id}
             >
               <View style={styles.slider}>
-                <Image source={image.image} style={{ width: ITEM_WIDTH }} />
+                <Image source={image.image} style={{ width: ITEM_WIDTH, borderRadius: 20 }} />
               </View>
             </Animated.View>
           ))}
@@ -250,6 +240,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     paddingTop: 100,
+    paddingBottom: 50,
   },
   sliderWrapper: {
     alignItems: 'center',
@@ -257,11 +248,18 @@ const styles = StyleSheet.create({
     width: ITEM_WIDTH,
     height: 300,
     borderRadius: 20,
-    overflow: 'hidden',
   },
-  slider: {
-    // backgroundColor: 'red',
+  shadow: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.36,
+    shadowRadius: 6.68,
+    elevation: 11,
   },
+  slider: {},
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
