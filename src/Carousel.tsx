@@ -21,7 +21,7 @@ const initialList = [
   { id: '4', image: require('./image/4.jpeg') },
 ]
 
-const MAGIC_COEF = 0.1 // need for android. Try to fix
+const MAGIC_COEF = Platform.OS === 'android' ? 0.1 : 0 // need for android. Try to fix
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const ITEM_WIDTH = Math.round(SCREEN_WIDTH - 100)
 console.log('ITEM_WIDTH: ', ITEM_WIDTH)
@@ -76,9 +76,11 @@ export const Carousel = () => {
     isScrolling.current = false
 
     if (isDrag.current === true) return
+
     const x =
-      Number(nativeEvent.contentOffset.x.toFixed(2)) -
-      (Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) + sumMarginHorizontal) * FAKE_PER_SIDE
+      nativeEvent.contentOffset.x -
+      (ITEM_WIDTH + sumMarginHorizontal) * FAKE_PER_SIDE +
+      marginHorizontal
     const index = Math.round(x / ITEM_WIDTH)
 
     // scroll to start
@@ -86,11 +88,6 @@ export const Carousel = () => {
       isScrolling.current = true
       // FAKE_PER_SIDE - simple way
       const toIndex = FAKE_PER_SIDE + index - initialList.length
-      console.log('toIndex: ', toIndex)
-      console.log('index: ', index)
-      console.log('initialList.length: ', initialList.length)
-      console.log('FAKE_PER_SIDE: ', FAKE_PER_SIDE)
-
       setTranslate(toIndex)
       scrolling2.setValue(ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal)
       ref.current?.scrollTo({
@@ -101,6 +98,7 @@ export const Carousel = () => {
 
       return
     }
+
     // scroll to end
     if (index <= -1) {
       isScrolling.current = true
@@ -138,10 +136,8 @@ export const Carousel = () => {
             Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
           const index = Math.round(x / ITEM_WIDTH) + 1
           const offset = ITEM_WIDTH * (index + FAKE_PER_SIDE) + (index + FAKE_PER_SIDE) * 20
-
           // sync drag and autoscroll value
           scrolling2.setValue(scrolling.current._value)
-
           Animated.timing(scrolling2, {
             toValue: offset,
             duration: 1000,
@@ -155,6 +151,7 @@ export const Carousel = () => {
 
   const scrollToIndex = (toIndex: number) => () => {
     stopAutoPlay()
+    // sync drag and autoscroll value
     scrolling2.setValue(scrolling.current._value)
     Animated.timing(scrolling2, {
       toValue: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal,
@@ -166,8 +163,8 @@ export const Carousel = () => {
   }
 
   useEffect(() => {
+    // TODO rename. Need for set scrolllView offset
     scrolling2.addListener(({ value }) => {
-      // console.log('SS: ', value)
       ref.current?.setNativeProps({
         contentOffset: {
           x: value,
@@ -192,14 +189,14 @@ export const Carousel = () => {
           contentContainerStyle={styles.scrollContainer}
           bounces={false}
           contentOffset={{
-            x: ITEM_WIDTH * FAKE_PER_SIDE + sumMarginHorizontal * FAKE_PER_SIDE,
+            x: ITEM_WIDTH * FAKE_PER_SIDE + sumMarginHorizontal * FAKE_PER_SIDE + MAGIC_COEF,
             y: 0,
           }}
           horizontal
           disableIntervalMomentum
           scrollEventThrottle={16}
           disableScrollViewPanResponder
-          snapToInterval={ITEM_WIDTH + sumMarginHorizontal + MAGIC_COEF}
+          snapToInterval={ITEM_WIDTH + sumMarginHorizontal}
           decelerationRate='fast'
           ref={ref}
           showsHorizontalScrollIndicator={false}
@@ -209,21 +206,30 @@ export const Carousel = () => {
           }}
           onScrollEndDrag={({ nativeEvent }) => {
             isDrag.current = false
+            // enable if want to avoid blink on fast scroll when go to the last item.
+            // It can looks like freez, I think this happens because IOS Easing not linier
             if (Platform.OS === 'ios') {
               const x =
-                Number(nativeEvent.contentOffset.x.toFixed(2)) -
-                Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
+                nativeEvent.contentOffset.x -
+                (ITEM_WIDTH + sumMarginHorizontal) * FAKE_PER_SIDE +
+                marginHorizontal
               const index = Math.round(x / ITEM_WIDTH)
 
-              ref.current?.scrollTo({
-                x:
-                  ITEM_WIDTH * (index + FAKE_PER_SIDE) +
-                  (index + FAKE_PER_SIDE) * sumMarginHorizontal,
-                y: 0,
-                animated: true,
-              })
+              // forbid scroll when user fast scroll to last item
+              if (index < 0 || index >= initialList.length) {
+                ref.current?.setNativeProps({
+                  scrollEnabled: false,
+                })
+              }
             }
             startAutoPlay(SLIDE_INTERACTION_DELAY)
+          }}
+          onMomentumScrollEnd={() => {
+            if (Platform.OS === 'ios') {
+              ref.current?.setNativeProps({
+                scrollEnabled: true,
+              })
+            }
           }}
           onScroll={({ nativeEvent }) => {
             if (isScrolling.current === false && translate) {
