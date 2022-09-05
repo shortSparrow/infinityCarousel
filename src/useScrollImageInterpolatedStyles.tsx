@@ -22,7 +22,7 @@ export const useScrollImageInterpolatedStyles = (
   }[],
   slideWidth: number,
   scrollEvent: Animated.Value,
-  translate: undefined | number
+  hiddenIndexScrolling: undefined | number
 ) => {
   const slidesCount = list.length
   const imageStyles = Array(slidesCount)
@@ -32,42 +32,53 @@ export const useScrollImageInterpolatedStyles = (
   for (let i = 0; i < slidesCount; i += 1) {
     imageStyles[i] = {
       style: {
-        // // varian 1
-        opacity: translate && translate === i ? 1 : interpolate(i, 0.6, 1),
+        // // version 1
+        opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 1 : interpolate(i, 0.6, 1),
         transform: [
           {
-            translateY: translate && translate === i ? -25 : interpolate(i, 0, -25),
+            translateY:
+              hiddenIndexScrolling && hiddenIndexScrolling === i ? -25 : interpolate(i, 0, -25),
           },
         ],
-        // // varian 2
+        // // version 2
         // transform: [
         //   {
-        //     scale: translate && translate === i ? 1 : interpolate(i, 0.6, 1),
+        //     scale: hiddenIndexScrolling && hiddenIndexScrolling === i ? 1 : interpolate(i, 0.6, 1),
         //   },
         // ],
-        // // varian 3
-        // opacity: translate && translate === i ? 1 : interpolate(i, 0.6, 1),
+        // // version 3
+        // opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 1 : interpolate(i, 0.6, 1),
         // transform: [
         //   {
-        //     rotateZ: translate && translate === i ? '0deg' : interpolate(i, '-50deg', '0deg'),
+        //     rotateZ:
+        //       hiddenIndexScrolling && hiddenIndexScrolling === i
+        //         ? '0deg'
+        //         : interpolate(i, '-50deg', '0deg'),
         //   },
         // ],
-        // zIndex: translate && translate === i ? 1 : interpolate(i, 0, 1),
-
-        // // varian 4 (ios)
+        // zIndex: hiddenIndexScrolling && hiddenIndexScrolling === i ? 1 : interpolate(i, 0, 1),
+        // // version 4 (ios)
         // transform: [
         //   {
-        //     skewY: translate && translate === i ? '0deg' : interpolate(i, '-45deg', '0deg'),
+        //     skewY:
+        //       hiddenIndexScrolling && hiddenIndexScrolling === i
+        //         ? '0deg'
+        //         : interpolate(i, '-45deg', '0deg'),
         //   },
         // ],
-
-         // // varian 4 (android)
-        //  transform: [
+        // // varian 4 (android)
+        // transform: [
         //   {
-        //     skewY: translate && translate === i ? '0deg' : interpolate(i, '-45deg', '0deg'),
+        //     skewY:
+        //       hiddenIndexScrolling && hiddenIndexScrolling === i
+        //         ? '0deg'
+        //         : interpolate(i, '-45deg', '0deg'),
         //   },
         //   {
-        //     rotate: translate && translate === i ? '0deg' : interpolate(i, '45deg', '0deg'),
+        //     rotate:
+        //       hiddenIndexScrolling && hiddenIndexScrolling === i
+        //         ? '0deg'
+        //         : interpolate(i, '45deg', '0deg'),
         //   },
         // ],
       },

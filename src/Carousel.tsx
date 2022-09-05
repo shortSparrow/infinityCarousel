@@ -21,16 +21,18 @@ const initialList = [
   { id: '4', image: require('./image/4.jpeg') },
 ]
 
-const MAGIC_COEF = Platform.OS === 'android' ? 0.1 : 0 // need for android. Try to fix
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const ITEM_WIDTH = Math.round(SCREEN_WIDTH - 100)
-console.log('ITEM_WIDTH: ', ITEM_WIDTH)
+
 const FAKE_COUNT = 6
+export const FAKE_PER_SIDE = FAKE_COUNT / 2
+
 const SLIDE_INTERVAL = 4000
 const SLIDE_INTERACTION_DELAY = 1000
-export const FAKE_PER_SIDE = FAKE_COUNT / 2
 const marginHorizontal = 10
 const sumMarginHorizontal = marginHorizontal * 2
+
+const MAGIC_COEF = Platform.OS === 'android' ? 0.1 : 0 // need for android. Try to fix
 
 const generateFakeItems = (count: number) => {
   const newList = [
@@ -42,19 +44,24 @@ const generateFakeItems = (count: number) => {
 }
 
 export const Carousel = () => {
+  // shows real offset
   const scrolling = useRef(new Animated.Value(0))
-  const scrolling2 = useRef(
+
+  // scrollViewOffset needed for adding custom smooth scroll with animation
+  const scrollViewOffset = useRef(
     new Animated.Value(ITEM_WIDTH * FAKE_PER_SIDE + sumMarginHorizontal * FAKE_PER_SIDE)
   ).current
+
   const intervalId = useRef<number | null>(null)
   const intervalDelayId = useRef<number | null>(null)
   const isScrolling = useRef(false)
-  const [translate, setTranslate] = useState<undefined | number>(undefined)
+  const isDrag = useRef<boolean>(false)
+  const ref = useRef<ScrollView>(null)
+
+  // help to avoid style blinking when go from fake items to real
+  const [hiddenIndexScrolling, setHiddenIndexScrolling] = useState<undefined | number>(undefined)
 
   const [list, setList] = useState(generateFakeItems(FAKE_PER_SIDE))
-
-  const ref = useRef<ScrollView>(null)
-  const isDrag = useRef<boolean>(false)
 
   const { dotsStyles } = useScrollDotsInterpolatedStyles(
     initialList.length,
@@ -65,13 +72,14 @@ export const Carousel = () => {
     list,
     ITEM_WIDTH + sumMarginHorizontal,
     scrolling.current,
-    translate
+    hiddenIndexScrolling
   )
 
   const debounceScrollHandle = debounce((nativeEvent: NativeScrollEvent) => {
     scrollHandle(nativeEvent)
   }, 50)
 
+  // when go to first fake images make momentum hidden scroll to real position
   const scrollHandle = (nativeEvent: NativeScrollEvent) => {
     isScrolling.current = false
 
@@ -85,37 +93,31 @@ export const Carousel = () => {
 
     // scroll to start
     if (index > initialList.length - 1) {
-      isScrolling.current = true
-      // FAKE_PER_SIDE - simple way
+      // FAKE_PER_SIDE - simple way, bu we handle case when user can swipe 2 and more items per one swipe, and navigate to real position
       const toIndex = FAKE_PER_SIDE + index - initialList.length
-      setTranslate(toIndex)
-      scrolling2.setValue(ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal)
-      ref.current?.scrollTo({
-        x: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal,
-        y: 0,
-        animated: false,
-      })
-
-      return
+      hiddenScrollToIndex(toIndex)
     }
 
     // scroll to end
     if (index <= -1) {
-      isScrolling.current = true
       const toIndex = initialList.length + index + FAKE_PER_SIDE
-      setTranslate(toIndex)
-      scrolling2.setValue(ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal)
-      ref.current?.scrollTo({
-        x: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal,
-        y: 0,
-        animated: false,
-      })
-      return
+      hiddenScrollToIndex(toIndex)
     }
   }
 
+  const hiddenScrollToIndex = (toIndex: number) => {
+    isScrolling.current = true
+    setHiddenIndexScrolling(toIndex)
+    scrollViewOffset.setValue(ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal)
+    ref.current?.scrollTo({
+      x: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal,
+      y: 0,
+      animated: false,
+    })
+  }
+
   const stopAutoPlay = useCallback(() => {
-    scrolling2.stopAnimation()
+    scrollViewOffset.stopAnimation()
     if (intervalId.current) {
       clearInterval(intervalId.current)
     }
@@ -125,7 +127,7 @@ export const Carousel = () => {
 
     intervalDelayId.current = null
     intervalId.current = null
-  }, [scrolling2])
+  }, [scrollViewOffset])
 
   const startAutoPlay = useCallback(
     (delay: number = 0) => {
@@ -137,8 +139,8 @@ export const Carousel = () => {
           const index = Math.round(x / ITEM_WIDTH) + 1
           const offset = ITEM_WIDTH * (index + FAKE_PER_SIDE) + (index + FAKE_PER_SIDE) * 20
           // sync drag and autoscroll value
-          scrolling2.setValue(scrolling.current._value)
-          Animated.timing(scrolling2, {
+          scrollViewOffset.setValue(scrolling.current._value)
+          Animated.timing(scrollViewOffset, {
             toValue: offset,
             duration: 1000,
             useNativeDriver: false,
@@ -146,14 +148,14 @@ export const Carousel = () => {
         }, SLIDE_INTERVAL)
       }, delay)
     },
-    [scrolling2]
+    [scrollViewOffset]
   )
 
   const scrollToIndex = (toIndex: number) => () => {
     stopAutoPlay()
     // sync drag and autoscroll value
-    scrolling2.setValue(scrolling.current._value)
-    Animated.timing(scrolling2, {
+    scrollViewOffset.setValue(scrolling.current._value)
+    Animated.timing(scrollViewOffset, {
       toValue: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal,
       duration: 1000,
       useNativeDriver: false,
@@ -162,9 +164,9 @@ export const Carousel = () => {
     startAutoPlay(SLIDE_INTERACTION_DELAY)
   }
 
+  // smooth scrollig by tap on index, and autoscroll
   useEffect(() => {
-    // TODO rename. Need for set scrolllView offset
-    scrolling2.addListener(({ value }) => {
+    scrollViewOffset.addListener(({ value }) => {
       ref.current?.setNativeProps({
         contentOffset: {
           x: value,
@@ -172,7 +174,7 @@ export const Carousel = () => {
         },
       })
     })
-  }, [scrolling2])
+  }, [scrollViewOffset])
 
   useEffect(() => {
     startAutoPlay()
@@ -207,7 +209,7 @@ export const Carousel = () => {
           onScrollEndDrag={({ nativeEvent }) => {
             isDrag.current = false
             // enable if want to avoid blink on fast scroll when go to the last item.
-            // It can looks like freez, I think this happens because IOS Easing not linier
+            // It can looks like freeze, I think this happens because IOS Easing not linier
             if (Platform.OS === 'ios') {
               const x =
                 nativeEvent.contentOffset.x -
@@ -232,8 +234,8 @@ export const Carousel = () => {
             }
           }}
           onScroll={({ nativeEvent }) => {
-            if (isScrolling.current === false && translate) {
-              setTranslate(undefined)
+            if (isScrolling.current === false && hiddenIndexScrolling) {
+              setHiddenIndexScrolling(undefined)
             }
             scrolling.current.setValue(nativeEvent.contentOffset.x)
             debounceScrollHandle(nativeEvent)
@@ -259,17 +261,6 @@ export const Carousel = () => {
           ))}
         </ScrollView>
       </View>
-
-      {/* <Animated.View
-        style={{
-          width: 100,
-          height: 100,
-          backgroundColor: 'red',
-          transform: [
-            { scale: scrolling2.interpolate({ inputRange: [0, 1000], outputRange: [0, 1] }) },
-          ],
-        }}
-      /> */}
       <View style={styles.dotsContainer}>
         {dotsStyles.map((dotStyle, index) => (
           <TouchableOpacity key={`sliderDots${index}`} onPress={scrollToIndex(index)}>
