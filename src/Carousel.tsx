@@ -13,6 +13,7 @@ import {
 import { debounce } from 'lodash'
 import { useScrollDotsInterpolatedStyles } from './useScrollDotsInterpolatedStyles'
 import { useScrollImageInterpolatedStyles } from './useScrollImageInterpolatedStyles'
+import { generateFakeItems } from './helpers/generateFakeItems'
 
 const initialList = [
   { id: '1', image: require('./image/1.jpeg') },
@@ -24,7 +25,7 @@ const initialList = [
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const ITEM_WIDTH = Math.round(SCREEN_WIDTH - 100)
 
-const FAKE_COUNT = 6
+const FAKE_COUNT = 4
 export const FAKE_PER_SIDE = FAKE_COUNT / 2
 
 const SLIDE_INTERVAL = 4000
@@ -33,15 +34,6 @@ const marginHorizontal = 10
 const sumMarginHorizontal = marginHorizontal * 2
 
 const MAGIC_COEF = Platform.OS === 'android' ? 0.1 : 0 // need for android. Try to fix
-
-const generateFakeItems = (count: number) => {
-  const newList = [
-    ...initialList.slice(-count).map((item) => ({ ...item, id: item.id + '-fake-start' })),
-    ...initialList,
-    ...initialList.slice(0, count).map((item) => ({ ...item, id: item.id + '-fake-end' })),
-  ]
-  return newList
-}
 
 export const Carousel = () => {
   // shows real offset
@@ -61,7 +53,7 @@ export const Carousel = () => {
   // help to avoid style blinking when go from fake items to real
   const [hiddenIndexScrolling, setHiddenIndexScrolling] = useState<undefined | number>(undefined)
 
-  const [list, setList] = useState(generateFakeItems(FAKE_PER_SIDE))
+  const [list, setList] = useState(generateFakeItems(initialList, FAKE_PER_SIDE))
 
   const { dotsStyles } = useScrollDotsInterpolatedStyles(
     initialList.length,
