@@ -5,20 +5,25 @@ type InitialList = {
 
 export const generateFakeItems = (initialList: InitialList, count: number) => {
   let newList = [...initialList]
+  let listToReverseForFakeStart = [...initialList]
+  listToReverseForFakeStart.reverse()
+  let fakeStart = []
+  let fakeEnd = []
+  const newItem = (listIndex: number, list: InitialList, loopIndex: number, side: string) => ({
+    ...list[listIndex],
+    id: `${list[listIndex].id}-fake-${side}-${loopIndex}`,
+  })
 
   for (let i = 0; i < count; i++) {
     const rest = i % initialList.length
     let index = i < initialList.length ? i : rest
-    let nextIndex = index === initialList.length - 1 ? 0 : index + 1
 
-    const newItemEnd = { ...initialList[index], id: `${initialList[index].id}-fake-end-${i}` }
-    const newItemStart = {
-      ...initialList[nextIndex],
-      id: `${initialList[nextIndex].id}-fake-start-${i}`,
-    }
-    newList.push(newItemEnd)
-    newList = [newItemStart, ...newList]
+    const newItemEnd = newItem(index, initialList, i, 'end')
+    const newItemStart = newItem(index, listToReverseForFakeStart, i, 'start')
+    fakeStart.unshift(newItemStart)
+    fakeEnd.push(newItemEnd)
   }
 
-  return newList
+  console.log('newList: ', [...fakeStart, ...newList, ...fakeEnd])
+  return [...fakeStart, ...newList, ...fakeEnd]
 }

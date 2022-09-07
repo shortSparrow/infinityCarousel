@@ -25,15 +25,13 @@ const initialList = [
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const ITEM_WIDTH = Math.round(SCREEN_WIDTH - 100)
 
-const FAKE_COUNT = 4
+const FAKE_COUNT = 8
 export const FAKE_PER_SIDE = FAKE_COUNT / 2
 
 const SLIDE_INTERVAL = 4000
 const SLIDE_INTERACTION_DELAY = 1000
 const marginHorizontal = 10
 const sumMarginHorizontal = marginHorizontal * 2
-
-const MAGIC_COEF = Platform.OS === 'android' ? 0.1 : 0 // need for android. Try to fix
 
 export const Carousel = () => {
   // shows real offset
@@ -145,10 +143,18 @@ export const Carousel = () => {
 
   const scrollToIndex = (toIndex: number) => () => {
     stopAutoPlay()
+
+    const snapToInterval = ITEM_WIDTH + sumMarginHorizontal
+    const newIndex = Math.round(scrolling.current._value / snapToInterval)
+    const newValue = newIndex * snapToInterval
+    // in Android we has additional small scroll if firstly scroll by drag, and then press bottom navigation button. Fo avoid this calculate difference between expected scroll and real scroll, this is our coef
+    const coef = newValue - scrolling.current._value
+
     // sync drag and autoscroll value
     scrollViewOffset.setValue(scrolling.current._value)
+
     Animated.timing(scrollViewOffset, {
-      toValue: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal,
+      toValue: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal - coef,
       duration: 1000,
       useNativeDriver: false,
     }).start()
@@ -183,7 +189,7 @@ export const Carousel = () => {
           contentContainerStyle={styles.scrollContainer}
           bounces={false}
           contentOffset={{
-            x: ITEM_WIDTH * FAKE_PER_SIDE + sumMarginHorizontal * FAKE_PER_SIDE + MAGIC_COEF,
+            x: ITEM_WIDTH * FAKE_PER_SIDE + sumMarginHorizontal * FAKE_PER_SIDE,
             y: 0,
           }}
           horizontal
