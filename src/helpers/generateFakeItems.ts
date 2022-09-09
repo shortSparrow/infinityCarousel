@@ -24,6 +24,5 @@ export const generateFakeItems = (initialList: InitialList, count: number) => {
     fakeEnd.push(newItemEnd)
   }
 
-  console.log('newList: ', [...fakeStart, ...newList, ...fakeEnd])
   return [...fakeStart, ...newList, ...fakeEnd]
 }

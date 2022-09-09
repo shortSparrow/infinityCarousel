@@ -35,7 +35,9 @@ const sumMarginHorizontal = marginHorizontal * 2
 
 export const Carousel = () => {
   // shows real offset
-  const scrolling = useRef(new Animated.Value(0))
+  const scrolling = useRef(
+    new Animated.Value(ITEM_WIDTH * FAKE_PER_SIDE + sumMarginHorizontal * FAKE_PER_SIDE)
+  )
 
   // scrollViewOffset needed for adding custom smooth scroll with animation
   const scrollViewOffset = useRef(
@@ -124,8 +126,9 @@ export const Carousel = () => {
       intervalDelayId.current = setTimeout(() => {
         intervalId.current = setInterval(() => {
           const x =
-            Number(scrolling.current._value) -
-            Number(Number(ITEM_WIDTH.toFixed(2)).toFixed(2)) * FAKE_PER_SIDE
+            scrolling.current._value -
+            (ITEM_WIDTH + sumMarginHorizontal) * FAKE_PER_SIDE +
+            marginHorizontal
           const index = Math.round(x / ITEM_WIDTH) + 1
           const offset = ITEM_WIDTH * (index + FAKE_PER_SIDE) + (index + FAKE_PER_SIDE) * 20
           // sync drag and autoscroll value
@@ -144,17 +147,11 @@ export const Carousel = () => {
   const scrollToIndex = (toIndex: number) => () => {
     stopAutoPlay()
 
-    const snapToInterval = ITEM_WIDTH + sumMarginHorizontal
-    const newIndex = Math.round(scrolling.current._value / snapToInterval)
-    const newValue = newIndex * snapToInterval
-    // in Android we has additional small scroll if firstly scroll by drag, and then press bottom navigation button. Fo avoid this calculate difference between expected scroll and real scroll, this is our coef
-    const coef = newValue - scrolling.current._value
-
     // sync drag and autoscroll value
     scrollViewOffset.setValue(scrolling.current._value)
 
     Animated.timing(scrollViewOffset, {
-      toValue: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal - coef,
+      toValue: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal,
       duration: 1000,
       useNativeDriver: false,
     }).start()
