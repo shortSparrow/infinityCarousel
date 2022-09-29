@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Platform,
   TouchableOpacity,
+  NativeSyntheticEvent,
 } from 'react-native'
 import { debounce } from 'lodash'
 import { useScrollDotsInterpolatedStyles } from './useScrollDotsInterpolatedStyles'
@@ -25,7 +26,7 @@ const initialList = [
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const ITEM_WIDTH = Math.round(SCREEN_WIDTH - 100)
 
-const FAKE_COUNT = 8
+const FAKE_COUNT = 4
 export const FAKE_PER_SIDE = FAKE_COUNT / 2
 
 const SLIDE_INTERVAL = 4000
@@ -81,7 +82,7 @@ export const Carousel = () => {
       nativeEvent.contentOffset.x -
       (ITEM_WIDTH + sumMarginHorizontal) * FAKE_PER_SIDE +
       marginHorizontal
-    const index = Math.round(x / ITEM_WIDTH)
+    const index = Math.round(x / (ITEM_WIDTH + sumMarginHorizontal))
 
     // scroll to start
     if (index > initialList.length - 1) {
@@ -99,8 +100,10 @@ export const Carousel = () => {
 
   const hiddenScrollToIndex = (toIndex: number) => {
     isScrolling.current = true
+    console.log('toIndex: ', toIndex)
+
     setHiddenIndexScrolling(toIndex)
-    scrollViewOffset.setValue(ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal)
+
     ref.current?.scrollTo({
       x: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal,
       y: 0,
@@ -129,14 +132,14 @@ export const Carousel = () => {
             scrolling.current._value -
             (ITEM_WIDTH + sumMarginHorizontal) * FAKE_PER_SIDE +
             marginHorizontal
-          const index = Math.round(x / ITEM_WIDTH) + 1
+          const index = Math.round(x / (ITEM_WIDTH + sumMarginHorizontal)) + 1
           const offset = ITEM_WIDTH * (index + FAKE_PER_SIDE) + (index + FAKE_PER_SIDE) * 20
           // sync drag and autoscroll value
           scrollViewOffset.setValue(scrolling.current._value)
           Animated.timing(scrollViewOffset, {
             toValue: offset,
             duration: 1000,
-            useNativeDriver: false,
+            useNativeDriver: true,
           }).start()
         }, SLIDE_INTERVAL)
       }, delay)
@@ -153,10 +156,50 @@ export const Carousel = () => {
     Animated.timing(scrollViewOffset, {
       toValue: ITEM_WIDTH * toIndex + toIndex * sumMarginHorizontal,
       duration: 1000,
-      useNativeDriver: false,
+      useNativeDriver: true,
     }).start()
 
     startAutoPlay(SLIDE_INTERACTION_DELAY)
+  }
+
+  const onScrollEndDrag = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+    isDrag.current = false
+    // enable if want to avoid blink on fast scroll when go to the last item.
+    // It can looks like freeze, I think this happens because IOS Easing not linier
+    if (Platform.OS === 'ios') {
+      const x =
+        nativeEvent.contentOffset.x -
+        (ITEM_WIDTH + sumMarginHorizontal) * FAKE_PER_SIDE +
+        marginHorizontal
+      const index = Math.round(x / (ITEM_WIDTH + sumMarginHorizontal))
+
+      // forbid scroll when user fast scroll to last item
+      if (index < 0 || index >= initialList.length) {
+        ref.current?.setNativeProps({
+          scrollEnabled: false,
+        })
+      }
+    }
+    startAutoPlay(SLIDE_INTERACTION_DELAY)
+  }
+  const onMomentumScrollEnd = (_: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (Platform.OS === 'ios') {
+      ref.current?.setNativeProps({
+        scrollEnabled: true,
+      })
+    }
+  }
+  const onScrollBeginDrag = (_: NativeSyntheticEvent<NativeScrollEvent>) => {
+    isDrag.current = true
+    stopAutoPlay()
+  }
+
+  const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+    if (isScrolling.current === false && hiddenIndexScrolling) {
+      setHiddenIndexScrolling(undefined)
+    }
+    scrolling.current.setValue(nativeEvent.contentOffset.x)
+    debounceScrollHandle(nativeEvent)
   }
 
   // smooth scrollig by tap on index, and autoscroll
@@ -197,44 +240,10 @@ export const Carousel = () => {
           decelerationRate='fast'
           ref={ref}
           showsHorizontalScrollIndicator={false}
-          onScrollBeginDrag={({ nativeEvent }) => {
-            isDrag.current = true
-            stopAutoPlay()
-          }}
-          onScrollEndDrag={({ nativeEvent }) => {
-            isDrag.current = false
-            // enable if want to avoid blink on fast scroll when go to the last item.
-            // It can looks like freeze, I think this happens because IOS Easing not linier
-            if (Platform.OS === 'ios') {
-              const x =
-                nativeEvent.contentOffset.x -
-                (ITEM_WIDTH + sumMarginHorizontal) * FAKE_PER_SIDE +
-                marginHorizontal
-              const index = Math.round(x / ITEM_WIDTH)
-
-              // forbid scroll when user fast scroll to last item
-              if (index < 0 || index >= initialList.length) {
-                ref.current?.setNativeProps({
-                  scrollEnabled: false,
-                })
-              }
-            }
-            startAutoPlay(SLIDE_INTERACTION_DELAY)
-          }}
-          onMomentumScrollEnd={() => {
-            if (Platform.OS === 'ios') {
-              ref.current?.setNativeProps({
-                scrollEnabled: true,
-              })
-            }
-          }}
-          onScroll={({ nativeEvent }) => {
-            if (isScrolling.current === false && hiddenIndexScrolling) {
-              setHiddenIndexScrolling(undefined)
-            }
-            scrolling.current.setValue(nativeEvent.contentOffset.x)
-            debounceScrollHandle(nativeEvent)
-          }}
+          onScrollBeginDrag={onScrollBeginDrag}
+          onScrollEndDrag={onScrollEndDrag}
+          onMomentumScrollEnd={onMomentumScrollEnd}
+          onScroll={onScroll}
         >
           {imageStyles.map(({ style, image }, i) => (
             <Animated.View

@@ -33,11 +33,11 @@ export const useScrollImageInterpolatedStyles = (
     imageStyles[i] = {
       style: {
         // // version 1
-        opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 1 : interpolate(i, 0.6, 1),
+        opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 0.99 : interpolate(i, 0.2, 1),
         transform: [
           {
             translateY:
-              hiddenIndexScrolling && hiddenIndexScrolling === i ? -25 : interpolate(i, 0, -25),
+              hiddenIndexScrolling && hiddenIndexScrolling === i ? -24.99 : interpolate(i, 0, -25),
           },
         ],
         // // version 2
