@@ -15,15 +15,114 @@ export const getImageInterpolator =
     })
   }
 
-export const useScrollImageInterpolatedStyles = (
+export enum SLIDER_ANIMATION_TYPE {
+  ONE,
+  TWO,
+  THREE,
+  FOUR,
+}
+
+const getAnimatedStyle = (
+  hiddenIndexScrolling: undefined | number,
+  i: number,
+  interpolate: (
+    slideItemIndex: number,
+    minValue: number,
+    maxValue: number
+  ) => Animated.AnimatedInterpolation,
+  type: SLIDER_ANIMATION_TYPE
+) => {
+  switch (type) {
+    case SLIDER_ANIMATION_TYPE.ONE:
+      return {
+        opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 0.99 : interpolate(i, 0.2, 1),
+        transform: [
+          {
+            translateY:
+              hiddenIndexScrolling && hiddenIndexScrolling === i ? -24.99 : interpolate(i, 0, -25),
+          },
+        ],
+      }
+    case SLIDER_ANIMATION_TYPE.TWO:
+      return {
+        transform: [
+          {
+            scale: hiddenIndexScrolling && hiddenIndexScrolling === i ? 1 : interpolate(i, 0.6, 1),
+          },
+        ],
+      }
+    case SLIDER_ANIMATION_TYPE.THREE:
+      return {
+        opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 1 : interpolate(i, 0.6, 1),
+        transform: [
+          {
+            rotateZ:
+              hiddenIndexScrolling && hiddenIndexScrolling === i
+                ? '0deg'
+                : interpolate(i, '-50deg', '0deg'),
+          },
+        ],
+        zIndex: interpolate(i, 0, 1),
+      }
+    case SLIDER_ANIMATION_TYPE.FOUR:
+      return {
+        transform: [
+          {
+            skewY:
+              hiddenIndexScrolling && hiddenIndexScrolling === i
+                ? '0deg'
+                : interpolate(i, '-45deg', '0deg'),
+          },
+          {
+            rotate:
+              hiddenIndexScrolling && hiddenIndexScrolling === i
+                ? '0deg'
+                : interpolate(i, '45deg', '0deg'),
+          },
+        ],
+      }
+    // default return ONE type
+    default:
+      return {
+        opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 0.99 : interpolate(i, 0.2, 1),
+        transform: [
+          {
+            translateY:
+              hiddenIndexScrolling && hiddenIndexScrolling === i ? -24.99 : interpolate(i, 0, -25),
+          },
+        ],
+      }
+  }
+}
+
+type UseScrollImageInterpolatedStyles = {
   list: {
     id: string
     image: any
-  }[],
-  slideWidth: number,
-  scrollEvent: Animated.Value,
+  }[]
+  slideWidth: number
+  scrollEvent: Animated.Value
   hiddenIndexScrolling: undefined | number
-) => {
+  animationType?: SLIDER_ANIMATION_TYPE
+  customAnimation?: (
+    hiddenIndexScrolling: undefined | number,
+    i: number,
+    interpolate: (
+      slideItemIndex: number,
+      minValue: number,
+      maxValue: number
+    ) => Animated.AnimatedInterpolation
+  ) => void
+}
+
+export const useScrollImageInterpolatedStyles = ({
+  list,
+  slideWidth,
+  scrollEvent,
+  hiddenIndexScrolling,
+  animationType = SLIDER_ANIMATION_TYPE.ONE,
+  customAnimation,
+}: UseScrollImageInterpolatedStyles) => {
   const slidesCount = list.length
   const imageStyles = Array(slidesCount)
 
@@ -32,55 +131,9 @@ export const useScrollImageInterpolatedStyles = (
   for (let i = 0; i < slidesCount; i += 1) {
     imageStyles[i] = {
       style: {
-        // // version 1
-        opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 0.99 : interpolate(i, 0.2, 1),
-        transform: [
-          {
-            translateY:
-              hiddenIndexScrolling && hiddenIndexScrolling === i ? -24.99 : interpolate(i, 0, -25),
-          },
-        ],
-        // // version 2
-        // transform: [
-        //   {
-        //     scale: hiddenIndexScrolling && hiddenIndexScrolling === i ? 1 : interpolate(i, 0.6, 1),
-        //   },
-        // ],
-        // // version 3
-        // opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 1 : interpolate(i, 0.6, 1),
-        // transform: [
-        //   {
-        //     rotateZ:
-        //       hiddenIndexScrolling && hiddenIndexScrolling === i
-        //         ? '0deg'
-        //         : interpolate(i, '-50deg', '0deg'),
-        //   },
-        // ],
-        // zIndex: hiddenIndexScrolling && hiddenIndexScrolling === i ? 1 : interpolate(i, 0, 1),
-        // // version 4 (ios)
-        // transform: [
-        //   {
-        //     skewY:
-        //       hiddenIndexScrolling && hiddenIndexScrolling === i
-        //         ? '0deg'
-        //         : interpolate(i, '-45deg', '0deg'),
-        //   },
-        // ],
-        // // varian 4 (android)
-        // transform: [
-        //   {
-        //     skewY:
-        //       hiddenIndexScrolling && hiddenIndexScrolling === i
-        //         ? '0deg'
-        //         : interpolate(i, '-45deg', '0deg'),
-        //   },
-        //   {
-        //     rotate:
-        //       hiddenIndexScrolling && hiddenIndexScrolling === i
-        //         ? '0deg'
-        //         : interpolate(i, '45deg', '0deg'),
-        //   },
-        // ],
+        ...(customAnimation
+          ? customAnimation(hiddenIndexScrolling, i, interpolate)
+          : getAnimatedStyle(hiddenIndexScrolling, i, interpolate, animationType)),
       },
       image: list[i],
     }

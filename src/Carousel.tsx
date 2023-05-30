@@ -14,7 +14,10 @@ import {
 } from 'react-native'
 import { debounce } from 'lodash'
 import { useScrollDotsInterpolatedStyles } from './useScrollDotsInterpolatedStyles'
-import { useScrollImageInterpolatedStyles } from './useScrollImageInterpolatedStyles'
+import {
+  SLIDER_ANIMATION_TYPE,
+  useScrollImageInterpolatedStyles,
+} from './useScrollImageInterpolatedStyles'
 import { generateFakeItems } from './helpers/generateFakeItems'
 import { styles } from './Carousel.style'
 
@@ -23,6 +26,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window')
 const FAKE_PER_SIDE = 2
 const SLIDE_INTERVAL = 4000
 const SLIDE_INTERACTION_DELAY = 1000
+const DEFAULT_ANIMATION_DURATION = 500
 
 export type SliderItem = { id: string; image: ImageSourcePropType }
 
@@ -35,11 +39,18 @@ type Props = ScrollViewProps & {
   autoScrollSlideInteractionDelay?: number
   offsetBetweenEachSLider?: number
   slideHorizontalOffset?: number
+  animationType?: SLIDER_ANIMATION_TYPE
+  animationDuration?: number
 
-  // onScroll?: (e: NativeSyntheticEvent<NativeScrollEvent>) => void
-  // onMomentumScrollEnd?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void
-  // onScrollEndDrag?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void
-  // onScrollBeginDrag?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void
+  customAnimation?: (
+    hiddenIndexScrolling: undefined | number,
+    i: number,
+    interpolate: (
+      slideItemIndex: number,
+      minValue: number,
+      maxValue: number
+    ) => Animated.AnimatedInterpolation
+  ) => void
 }
 
 export const Carousel = (props: Props) => {
@@ -51,6 +62,9 @@ export const Carousel = (props: Props) => {
     autoScrollSlideInteractionDelay = SLIDE_INTERACTION_DELAY,
     sliders,
     slideHorizontalOffset = 10,
+    animationType,
+    customAnimation,
+    animationDuration = DEFAULT_ANIMATION_DURATION,
 
     onScroll,
     onMomentumScrollEnd,
@@ -86,12 +100,14 @@ export const Carousel = (props: Props) => {
     scrolling.current,
     fakeImagePerSide
   )
-  const { imageStyles } = useScrollImageInterpolatedStyles(
-    list,
-    itemWidth + SumOfTwoSlidesHorizontalOffset,
-    scrolling.current,
-    hiddenIndexScrolling
-  )
+  const { imageStyles } = useScrollImageInterpolatedStyles({
+    list: list,
+    slideWidth: itemWidth + SumOfTwoSlidesHorizontalOffset,
+    scrollEvent: scrolling.current,
+    hiddenIndexScrolling: hiddenIndexScrolling,
+    animationType: animationType,
+    customAnimation: customAnimation,
+  })
 
   const debounceScrollHandle = debounce((nativeEvent: NativeScrollEvent) => {
     scrollHandle(nativeEvent)
@@ -162,7 +178,7 @@ export const Carousel = (props: Props) => {
           scrollViewOffset.setValue(scrolling.current._value)
           Animated.timing(scrollViewOffset, {
             toValue: offset,
-            duration: 1000,
+            duration: animationDuration,
             useNativeDriver: true,
           }).start()
         }, autoScrollSlideInterval)
@@ -176,6 +192,7 @@ export const Carousel = (props: Props) => {
       fakeImagePerSide,
       slideHorizontalOffset,
       scrollViewOffset,
+      animationDuration,
     ]
   )
 
@@ -187,7 +204,7 @@ export const Carousel = (props: Props) => {
 
     Animated.timing(scrollViewOffset, {
       toValue: itemWidth * toIndex + toIndex * SumOfTwoSlidesHorizontalOffset,
-      duration: 1000,
+      duration: animationDuration,
       useNativeDriver: true,
     }).start()
 
@@ -299,7 +316,10 @@ export const Carousel = (props: Props) => {
               key={image.id}
             >
               <View style={styles.slider}>
-                <Image source={image.image} style={{ width: itemWidth, borderRadius: 20 }} />
+                <Image
+                  source={image.image}
+                  style={{ width: itemWidth, height: '100%', borderRadius: 20 }}
+                />
               </View>
             </Animated.View>
           ))}
