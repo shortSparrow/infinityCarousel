@@ -1,18 +1,25 @@
 import { Animated } from 'react-native'
-import { FAKE_PER_SIDE } from './Carousel'
+// import { FAKE_PER_SIDE } from './Carousel'
 
-export const getInterpolator =
-  (animatedValue: Animated.Value, slideWidth: number, slidesCount: number) =>
+const getInterpolator =
+  (
+    animatedValue: Animated.Value,
+    slideWidth: number,
+    slidesCount: number,
+    fakeImagePerSide: number
+  ) =>
   (slideItemIndex: number, minValue: number, maxValue: number): Animated.AnimatedInterpolation => {
-    const lastIndex = slidesCount + FAKE_PER_SIDE - 1
-    const inputRange = [...Array(slidesCount + FAKE_PER_SIDE)].map((_, i) => (i + 1) * slideWidth)
+    const lastIndex = slidesCount + fakeImagePerSide - 1
+    const inputRange = [...Array(slidesCount + fakeImagePerSide)].map(
+      (_, i) => (i + 1) * slideWidth
+    )
 
-    const arr = [...Array(FAKE_PER_SIDE + slidesCount)]
+    const arr = [...Array(fakeImagePerSide + slidesCount)]
 
     arr[arr.length - 1] = maxValue
-    arr[FAKE_PER_SIDE - 1] = maxValue
+    arr[fakeImagePerSide - 1] = maxValue
 
-    for (let i = FAKE_PER_SIDE - 1; i >= 0; i -= 2) {
+    for (let i = fakeImagePerSide - 1; i >= 0; i -= 2) {
       arr[i] = maxValue
     }
 
@@ -57,7 +64,7 @@ export const getInterpolator =
     // outputRange: [maxValue, minValue, maxValue, minValue, minValue, minValue, maxValue, minValue],
 
     switch (slideItemIndex) {
-      case FAKE_PER_SIDE:
+      case fakeImagePerSide:
         return animatedValue.interpolate({
           inputRange,
           outputRange: firstImageOutput,
@@ -87,13 +94,14 @@ export const getInterpolator =
 export const useScrollDotsInterpolatedStyles = (
   slidesCount: number,
   slideWidth: number,
-  scrollEvent: Animated.Value
+  scrollEvent: Animated.Value,
+  fakeImagePerSide: number
 ) => {
   const dotsStyles = Array<any>(slidesCount)
 
-  const interpolate = getInterpolator(scrollEvent, slideWidth, slidesCount)
+  const interpolate = getInterpolator(scrollEvent, slideWidth, slidesCount, fakeImagePerSide)
 
-  for (let i = FAKE_PER_SIDE; i < slidesCount + FAKE_PER_SIDE; i += 1) {
+  for (let i = fakeImagePerSide; i < slidesCount + fakeImagePerSide; i += 1) {
     dotsStyles[i] = {
       transform: [
         {
