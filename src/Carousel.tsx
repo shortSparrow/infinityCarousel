@@ -66,6 +66,7 @@ type Props = ScrollViewProps & {
   imageProps?: Omit<ImageProps, 'source'>
   dotsContainerStyles?: ViewStyle
   dotStyles?: ViewStyle
+  getScrollAnimation: (scrollingAnimation: React.MutableRefObject<Animated.Value>) => void
 }
 
 export const Carousel = (props: Props) => {
@@ -95,6 +96,7 @@ export const Carousel = (props: Props) => {
     imageProps = {},
     dotsContainerStyles,
     dotStyles,
+    getScrollAnimation,
 
     ...rest
   } = props
@@ -121,6 +123,10 @@ export const Carousel = (props: Props) => {
   useLayoutEffect(() => {
     setScrollViewRef && setScrollViewRef(ref)
   }, [ref, setScrollViewRef])
+
+  useLayoutEffect(() => {
+    getScrollAnimation && getScrollAnimation(scrolling)
+  }, [getScrollAnimation])
 
   const { animatedDotsStyles } = useScrollDotsInterpolatedStyles({
     slidesCount: images.length,
@@ -351,7 +357,7 @@ export const Carousel = (props: Props) => {
           onMomentumScrollEnd={_onMomentumScrollEnd}
           onScroll={_onScroll}
           contentContainerStyle={{
-            marginLeft: horizontalMargin,
+            paddingHorizontal: horizontalMargin,
             paddingTop: slideAnimationType === SLIDE_ANIMATION_TYPE.MOVE_UP ? 25 : 0,
           }}
           {...rest}
