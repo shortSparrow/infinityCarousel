@@ -1,14 +1,9 @@
-import { Animated } from 'react-native'
 import { SLIDER_ANIMATION_TYPE } from '../../hooks/useScrollSlideInterpolatedStyles'
 
 export const getSlideAnimatedStyle = (
   hiddenIndexScrolling: undefined | number,
   i: number,
-  interpolate: (
-    slideItemIndex: number,
-    minValue: number,
-    maxValue: number
-  ) => Animated.AnimatedInterpolation,
+  interpolate: (slideItemIndex: number, minValue: number, maxValue: number) => any,
   type: SLIDER_ANIMATION_TYPE
 ) => {
   switch (type) {

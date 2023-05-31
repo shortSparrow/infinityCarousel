@@ -1,13 +1,8 @@
-import { Animated } from 'react-native'
 import { DOTS_ANIMATION_TYPE } from '../../hooks/useScrollDotsInterpolatedStyles'
 
 export const getDotsAnimatedStyle = (
   i: number,
-  interpolate: (
-    slideItemIndex: number,
-    minValue: number,
-    maxValue: number
-  ) => Animated.AnimatedInterpolation,
+  interpolate: (slideItemIndex: number, minValue: number, maxValue: number) => any,
   type: DOTS_ANIMATION_TYPE
 ) => {
   switch (type) {

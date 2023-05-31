@@ -15,7 +15,7 @@ import {
   ImageStyle,
   ImageProps,
 } from 'react-native'
-import { debounce } from 'lodash'
+import debounce from 'lodash.debounce'
 import {
   DOTS_ANIMATION_TYPE,
   useScrollDotsInterpolatedStyles,
@@ -53,19 +53,11 @@ type Props = ScrollViewProps & {
   customSlideAnimation?: (
     hiddenIndexScrolling: undefined | number,
     i: number,
-    interpolate: (
-      slideItemIndex: number,
-      minValue: number,
-      maxValue: number
-    ) => Animated.AnimatedInterpolation
+    interpolate: (slideItemIndex: number, minValue: number, maxValue: number) => any
   ) => any
   customDotsAnimation?: (
     i: number,
-    interpolate: (
-      slideItemIndex: number,
-      minValue: number,
-      maxValue: number
-    ) => Animated.AnimatedInterpolation
+    interpolate: (slideItemIndex: number, minValue: number, maxValue: number) => any
   ) => any
   customDots?: (dotsStyles: any[], scrollToIndex: (index: number) => void) => JSX.Element
   setScrollViewRef?: (ref: React.RefObject<ScrollView>) => void
@@ -358,7 +350,10 @@ export const Carousel = (props: Props) => {
           onScrollEndDrag={_onScrollEndDrag}
           onMomentumScrollEnd={_onMomentumScrollEnd}
           onScroll={_onScroll}
-          contentContainerStyle={{ marginLeft: horizontalMargin }}
+          contentContainerStyle={{
+            marginLeft: horizontalMargin,
+            paddingTop: slideAnimationType === SLIDER_ANIMATION_TYPE.MOVE_UP ? 25 : 0,
+          }}
           {...rest}
         >
           {animatedImageStyles.map(({ style, image }) => (

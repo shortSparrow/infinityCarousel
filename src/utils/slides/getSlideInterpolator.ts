@@ -2,7 +2,7 @@ import { Animated } from 'react-native'
 
 export const getSlideInterpolator =
   (animatedValue: Animated.Value, slideWidth: number) =>
-  (slideItemIndex: number, minValue: number, maxValue: number): Animated.AnimatedInterpolation => {
+  (slideItemIndex: number, minValue: number, maxValue: number): any => {
     return animatedValue.interpolate({
       inputRange: [
         (slideItemIndex - 1) * slideWidth,

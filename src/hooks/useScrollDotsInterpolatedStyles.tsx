@@ -16,11 +16,7 @@ type UseScrollDotsInterpolatedStyles = {
   dotsAnimationType: DOTS_ANIMATION_TYPE
   customDotsAnimation?: (
     i: number,
-    interpolate: (
-      slideItemIndex: number,
-      minValue: number,
-      maxValue: number
-    ) => Animated.AnimatedInterpolation
+    interpolate: (slideItemIndex: number, minValue: number, maxValue: number) => any
   ) => any
 }
 export const useScrollDotsInterpolatedStyles = ({

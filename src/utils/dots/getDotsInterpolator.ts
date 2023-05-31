@@ -7,7 +7,7 @@ export const getDotsInterpolator =
     slidesCount: number,
     fakeImagePerSide: number
   ) =>
-  (slideItemIndex: number, minValue: number, maxValue: number): Animated.AnimatedInterpolation => {
+  (slideItemIndex: number, minValue: number, maxValue: number): any => {
     const lastIndex = slidesCount + fakeImagePerSide - 1
     const inputRange = [...Array(slidesCount + fakeImagePerSide)].map(
       (_, i) => (i + 1) * slideWidth
