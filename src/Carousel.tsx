@@ -42,11 +42,11 @@ type Props = ScrollViewProps & {
   autoScrollSlideInteractionDelay?: number
   offsetBetweenEachSLider?: number
   slideHorizontalOffset?: number
-  animationType?: SLIDER_ANIMATION_TYPE
+  slideAnimationType?: SLIDER_ANIMATION_TYPE
   animationDuration?: number
-  sliderPosition?: 'center' | 'left' | number
+  slideAlign?: 'center' | 'left' | number
   containerWidth?: number
-  dotsAnimation?: DOTS_ANIMATION
+  dotsAnimationType?: DOTS_ANIMATION
   scrollViewRef?: React.RefObject<ScrollView>
 
   customSlideAnimation?: (
@@ -68,44 +68,47 @@ type Props = ScrollViewProps & {
   ) => any
   customDots?: (dotsStyles: any[], scrollToIndex: (index: number) => () => void) => JSX.Element
   setScrollViewRef?: (ref: React.RefObject<ScrollView>) => void
-  sliderStyles?: Omit<ViewStyle, 'width'>
-  sliderImageStyles?: ImageStyle
+  slideStyles?: Omit<ViewStyle, 'width'>
+  imageStyles?: ImageStyle
   imageProps?: Omit<ImageProps, 'source'>
+  dotsContainerStyles?: ViewStyle
+  dotStyles?: ViewStyle
 }
 
 export const Carousel = (props: Props) => {
   const {
     fakeImagePerSide = FAKE_PER_SIDE,
-    slideWidth: slideWidth = SCREEN_WIDTH,
+    slideWidth = SCREEN_WIDTH,
+    slideHorizontalOffset = 10,
     isAutoScroll = false,
     autoScrollSlideInterval = SLIDE_INTERVAL,
     autoScrollSlideInteractionDelay = SLIDE_INTERACTION_DELAY,
     images,
-    slideHorizontalOffset = 10,
-    animationType,
-    customSlideAnimation: customSlideAnimation,
+    slideAnimationType,
+    customSlideAnimation,
     customDotsAnimation,
     animationDuration = DEFAULT_ANIMATION_DURATION,
-    sliderPosition = 'center',
+    slideAlign = 'center',
     containerWidth,
-    dotsAnimation: dotsAnimationType = DOTS_ANIMATION.SCALE_WITH_OPACITY,
+    dotsAnimationType = DOTS_ANIMATION.SCALE_WITH_OPACITY,
     onScroll,
     onMomentumScrollEnd,
     onScrollEndDrag,
     onScrollBeginDrag,
     customDots,
     setScrollViewRef,
-    sliderStyles,
-    sliderImageStyles,
+    slideStyles,
+    imageStyles,
     imageProps = {},
+    dotsContainerStyles,
+    dotStyles,
 
     ...rest
   } = props
 
   const [currentContainerWidth, setCurrentContainerWidth] = useState(containerWidth)
-  const fullSlidesHorizontalOffset = slideHorizontalOffset * 2
-  const initialOffset =
-    slideWidth * fakeImagePerSide + fullSlidesHorizontalOffset * fakeImagePerSide
+  const fullSlideHorizontalOffset = slideHorizontalOffset * 2
+  const initialOffset = slideWidth * fakeImagePerSide + fullSlideHorizontalOffset * fakeImagePerSide
   // shows real offset
   const scrolling = useRef(new Animated.Value(initialOffset))
 
@@ -119,7 +122,7 @@ export const Carousel = (props: Props) => {
   const ref = useRef<ScrollView>(null)
 
   useLayoutEffect(() => {
-    setScrollViewRef(ref)
+    setScrollViewRef && setScrollViewRef(ref)
   }, [ref, setScrollViewRef])
 
   // help to avoid style blinking when go from fake items to real
@@ -127,39 +130,39 @@ export const Carousel = (props: Props) => {
 
   const [list] = useState(generateFakeItems(images, fakeImagePerSide))
 
-  const { dotsStyles } = useScrollDotsInterpolatedStyles({
+  const { animatedDotsStyles } = useScrollDotsInterpolatedStyles({
     slidesCount: images.length,
-    slideWidth: slideWidth + fullSlidesHorizontalOffset,
+    slideWidthWithOffset: slideWidth + fullSlideHorizontalOffset,
     scrollEvent: scrolling.current,
     fakeImagePerSide: fakeImagePerSide,
-    type: dotsAnimationType,
-    customDotsAnimation: customDotsAnimation,
+    dotsAnimationType,
+    customDotsAnimation,
   })
 
-  const { imageStyles } = useScrollImageInterpolatedStyles({
+  const { animatedImageStyles } = useScrollImageInterpolatedStyles({
     list: list,
-    slideWidth: slideWidth + fullSlidesHorizontalOffset,
+    slideWidthWithOffset: slideWidth + fullSlideHorizontalOffset,
     scrollEvent: scrolling.current,
     hiddenIndexScrolling: hiddenIndexScrolling,
-    animationType: animationType,
-    customAnimation: customSlideAnimation,
+    slideAnimationType,
+    customSlideAnimation,
   })
 
-  const debounceScrollHandle = debounce((nativeEvent: NativeScrollEvent) => {
-    scrollHandle(nativeEvent)
+  const debounceHandleScroll = debounce((nativeEvent: NativeScrollEvent) => {
+    handleScroll(nativeEvent)
   }, 50)
 
   // when go to first fake images make momentum hidden scroll to real position
-  const scrollHandle = (nativeEvent: NativeScrollEvent) => {
+  const handleScroll = (nativeEvent: NativeScrollEvent) => {
     isScrolling.current = false
 
     if (isDrag.current === true) return
 
     const x =
       nativeEvent.contentOffset.x -
-      (slideWidth + fullSlidesHorizontalOffset) * fakeImagePerSide +
+      (slideWidth + fullSlideHorizontalOffset) * fakeImagePerSide +
       slideHorizontalOffset
-    const index = Math.round(x / (slideWidth + fullSlidesHorizontalOffset))
+    const index = Math.round(x / (slideWidth + fullSlideHorizontalOffset))
 
     // scroll to start
     if (index > images.length - 1) {
@@ -180,7 +183,7 @@ export const Carousel = (props: Props) => {
     setHiddenIndexScrolling(toIndex)
 
     ref.current?.scrollTo({
-      x: slideWidth * toIndex + toIndex * fullSlidesHorizontalOffset,
+      x: slideWidth * toIndex + toIndex * fullSlideHorizontalOffset,
       y: 0,
       animated: false,
     })
@@ -206,9 +209,9 @@ export const Carousel = (props: Props) => {
         intervalId.current = setInterval(() => {
           const x =
             scrolling.current._value -
-            (slideWidth + fullSlidesHorizontalOffset) * fakeImagePerSide +
+            (slideWidth + fullSlideHorizontalOffset) * fakeImagePerSide +
             slideHorizontalOffset
-          const index = Math.round(x / (slideWidth + fullSlidesHorizontalOffset)) + 1
+          const index = Math.round(x / (slideWidth + fullSlideHorizontalOffset)) + 1
           const offset = slideWidth * (index + fakeImagePerSide) + (index + fakeImagePerSide) * 20
           // sync drag and autoscroll value
           scrollViewOffset.setValue(scrolling.current._value)
@@ -224,7 +227,7 @@ export const Carousel = (props: Props) => {
       isAutoScroll,
       autoScrollSlideInterval,
       slideWidth,
-      fullSlidesHorizontalOffset,
+      fullSlideHorizontalOffset,
       fakeImagePerSide,
       slideHorizontalOffset,
       scrollViewOffset,
@@ -239,7 +242,7 @@ export const Carousel = (props: Props) => {
     scrollViewOffset.setValue(scrolling.current._value)
 
     Animated.timing(scrollViewOffset, {
-      toValue: slideWidth * toIndex + toIndex * fullSlidesHorizontalOffset,
+      toValue: slideWidth * toIndex + toIndex * fullSlideHorizontalOffset,
       duration: animationDuration,
       useNativeDriver: true,
     }).start()
@@ -254,9 +257,9 @@ export const Carousel = (props: Props) => {
     if (Platform.OS === 'ios') {
       const x =
         e.nativeEvent.contentOffset.x -
-        (slideWidth + fullSlidesHorizontalOffset) * fakeImagePerSide +
+        (slideWidth + fullSlideHorizontalOffset) * fakeImagePerSide +
         slideHorizontalOffset
-      const index = Math.round(x / (slideWidth + fullSlidesHorizontalOffset))
+      const index = Math.round(x / (slideWidth + fullSlideHorizontalOffset))
 
       // forbid scroll when user fast scroll to last item
       if (index < 0 || index >= images.length) {
@@ -289,7 +292,7 @@ export const Carousel = (props: Props) => {
       setHiddenIndexScrolling(undefined)
     }
     scrolling.current.setValue(e.nativeEvent.contentOffset.x)
-    debounceScrollHandle(e.nativeEvent)
+    debounceHandleScroll(e.nativeEvent)
     onScroll && onScroll(e)
   }
 
@@ -314,20 +317,23 @@ export const Carousel = (props: Props) => {
   }, [tryStartAutoPlay, stopAutoPlay, isAutoScroll])
 
   const horizontalMargin = useMemo(() => {
-    if (sliderPosition === 'center') {
+    if (slideAlign === 'center') {
       if (currentContainerWidth === undefined) return 0
       const w = slideWidth + slideHorizontalOffset * 2
       const restPart = currentContainerWidth % w
       return restPart / 2 + slideHorizontalOffset
     }
 
-    if (sliderPosition === 'left') return 0
+    if (slideAlign === 'left') return 0
 
-    return sliderPosition
-  }, [sliderPosition, slideWidth, slideHorizontalOffset, currentContainerWidth])
+    return slideAlign
+  }, [slideAlign, slideWidth, slideHorizontalOffset, currentContainerWidth])
 
-  const sliderStyle = sliderStyles ?? [styles.sliderWrapper, styles.shadow]
-  const imageStyle = sliderImageStyles ?? { width: slideWidth, height: '100%', borderRadius: 20 }
+  const slideStyle = slideStyles ?? [styles.slideWrapper, styles.shadow]
+  const imageStyle = imageStyles ?? [{ width: slideWidth }, styles.image]
+  const dotsContainerStyle = dotsContainerStyles ?? styles.dotsContainer
+  const dotStyle = dotStyles ?? styles.dot
+
   return (
     <View style={[styles.wrapper, { opacity: !currentContainerWidth ? 0 : 1 }]}>
       <View>
@@ -337,7 +343,6 @@ export const Carousel = (props: Props) => {
               setCurrentContainerWidth(e.nativeEvent.layout.width)
             }
           }}
-          contentContainerStyle={styles.scrollContainer}
           bounces={false}
           contentOffset={{
             x: initialOffset,
@@ -347,7 +352,7 @@ export const Carousel = (props: Props) => {
           disableIntervalMomentum
           scrollEventThrottle={16}
           disableScrollViewPanResponder
-          snapToInterval={slideWidth + fullSlidesHorizontalOffset}
+          snapToInterval={slideWidth + fullSlideHorizontalOffset}
           decelerationRate='fast'
           ref={ref}
           showsHorizontalScrollIndicator={false}
@@ -357,10 +362,10 @@ export const Carousel = (props: Props) => {
           onScroll={_onScroll}
           {...rest}
         >
-          {imageStyles.map(({ style, image }, i) => (
+          {animatedImageStyles.map(({ style, image }, i) => (
             <Animated.View
               style={[
-                sliderStyle,
+                slideStyle,
                 {
                   width: slideWidth,
                   marginRight: i === list.length - 1 ? horizontalMargin : slideHorizontalOffset,
@@ -376,12 +381,12 @@ export const Carousel = (props: Props) => {
         </ScrollView>
       </View>
       {customDots ? (
-        customDots(dotsStyles, scrollToIndex)
+        customDots(animatedDotsStyles, scrollToIndex)
       ) : (
-        <View style={styles.dotsContainer}>
-          {dotsStyles.map((dotStyle, index) => (
-            <TouchableOpacity key={`sliderDots${index}`} onPress={scrollToIndex(index)}>
-              <Animated.View style={[styles.dot, dotStyle]} />
+        <View style={dotsContainerStyle}>
+          {animatedDotsStyles.map((animatedDotStyle, index) => (
+            <TouchableOpacity key={index} onPress={scrollToIndex(index)}>
+              <Animated.View style={[dotStyle, animatedDotStyle]} />
             </TouchableOpacity>
           ))}
         </View>

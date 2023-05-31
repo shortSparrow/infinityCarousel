@@ -1,4 +1,4 @@
-import { Animated, Easing, ViewStyle } from 'react-native'
+import { Animated, ViewStyle } from 'react-native'
 
 export const getImageInterpolator =
   (animatedValue: Animated.Value, slideWidth: number) =>
@@ -95,11 +95,11 @@ type UseScrollImageInterpolatedStyles = {
     id: string
     image: any
   }[]
-  slideWidth: number
+  slideWidthWithOffset: number
   scrollEvent: Animated.Value
   hiddenIndexScrolling: undefined | number
-  animationType?: SLIDER_ANIMATION_TYPE
-  customAnimation?: (
+  slideAnimationType?: SLIDER_ANIMATION_TYPE
+  customSlideAnimation?: (
     hiddenIndexScrolling: undefined | number,
     i: number,
     interpolate: (
@@ -112,29 +112,29 @@ type UseScrollImageInterpolatedStyles = {
 
 export const useScrollImageInterpolatedStyles = ({
   list,
-  slideWidth,
+  slideWidthWithOffset,
   scrollEvent,
   hiddenIndexScrolling,
-  animationType = SLIDER_ANIMATION_TYPE.ONE,
-  customAnimation,
+  slideAnimationType = SLIDER_ANIMATION_TYPE.ONE,
+  customSlideAnimation,
 }: UseScrollImageInterpolatedStyles) => {
   const slidesCount = list.length
-  const imageStyles = Array(slidesCount)
+  const animatedImageStyles = Array(slidesCount)
 
-  const interpolate = getImageInterpolator(scrollEvent, slideWidth)
+  const interpolate = getImageInterpolator(scrollEvent, slideWidthWithOffset)
 
   for (let i = 0; i < slidesCount; i += 1) {
-    imageStyles[i] = {
+    animatedImageStyles[i] = {
       style: {
-        ...(customAnimation
-          ? customAnimation(hiddenIndexScrolling, i, interpolate)
-          : getAnimatedStyle(hiddenIndexScrolling, i, interpolate, animationType)),
+        ...(customSlideAnimation
+          ? customSlideAnimation(hiddenIndexScrolling, i, interpolate)
+          : getAnimatedStyle(hiddenIndexScrolling, i, interpolate, slideAnimationType)),
       },
       image: list[i],
     }
   }
 
   return {
-    imageStyles,
+    animatedImageStyles,
   }
 }

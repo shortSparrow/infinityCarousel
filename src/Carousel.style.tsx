@@ -8,11 +8,11 @@ export const styles = StyleSheet.create({
     paddingTop: 100,
     paddingBottom: 50,
   },
-  sliderWrapper: {
-    // alignItems: 'center',
-    // justifyContent: 'center',
-    // width: itemWidth,
-    height: 300, // TODO
+  slideWrapper: {
+    borderRadius: 20,
+  },
+  image: {
+    height: '100%',
     borderRadius: 20,
   },
   shadow: {
@@ -25,7 +25,6 @@ export const styles = StyleSheet.create({
     shadowRadius: 6.68,
     elevation: 11,
   },
-  slider: {}, // TODO
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
