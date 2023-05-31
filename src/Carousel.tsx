@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
   View,
   ScrollView,
@@ -11,6 +11,9 @@ import {
   NativeSyntheticEvent,
   ImageSourcePropType,
   ScrollViewProps,
+  ViewStyle,
+  ImageStyle,
+  ImageProps,
 } from 'react-native'
 import { debounce } from 'lodash'
 import { DOTS_ANIMATION, useScrollDotsInterpolatedStyles } from './useScrollDotsInterpolatedStyles'
@@ -31,9 +34,9 @@ const DEFAULT_ANIMATION_DURATION = 500
 export type SliderItem = { id: string; image: ImageSourcePropType }
 
 type Props = ScrollViewProps & {
-  sliders: SliderItem[]
+  images: SliderItem[]
   fakeImagePerSide: number
-  itemWidth?: number
+  slideWidth?: number
   isAutoScroll?: boolean
   autoScrollSlideInterval?: number
   autoScrollSlideInteractionDelay?: number
@@ -44,6 +47,7 @@ type Props = ScrollViewProps & {
   sliderPosition?: 'center' | 'left' | number
   containerWidth?: number
   dotsAnimation?: DOTS_ANIMATION
+  scrollViewRef?: React.RefObject<ScrollView>
 
   customSlideAnimation?: (
     hiddenIndexScrolling: undefined | number,
@@ -62,16 +66,21 @@ type Props = ScrollViewProps & {
       maxValue: number
     ) => Animated.AnimatedInterpolation
   ) => any
+  customDots?: (dotsStyles: any[], scrollToIndex: (index: number) => () => void) => JSX.Element
+  setScrollViewRef?: (ref: React.RefObject<ScrollView>) => void
+  sliderStyles?: Omit<ViewStyle, 'width'>
+  sliderImageStyles?: ImageStyle
+  imageProps?: Omit<ImageProps, 'source'>
 }
 
 export const Carousel = (props: Props) => {
   const {
     fakeImagePerSide = FAKE_PER_SIDE,
-    itemWidth = SCREEN_WIDTH,
+    slideWidth: slideWidth = SCREEN_WIDTH,
     isAutoScroll = false,
     autoScrollSlideInterval = SLIDE_INTERVAL,
     autoScrollSlideInteractionDelay = SLIDE_INTERACTION_DELAY,
-    sliders,
+    images,
     slideHorizontalOffset = 10,
     animationType,
     customSlideAnimation: customSlideAnimation,
@@ -84,11 +93,19 @@ export const Carousel = (props: Props) => {
     onMomentumScrollEnd,
     onScrollEndDrag,
     onScrollBeginDrag,
+    customDots,
+    setScrollViewRef,
+    sliderStyles,
+    sliderImageStyles,
+    imageProps = {},
 
     ...rest
   } = props
+
+  const [currentContainerWidth, setCurrentContainerWidth] = useState(containerWidth)
   const fullSlidesHorizontalOffset = slideHorizontalOffset * 2
-  const initialOffset = itemWidth * fakeImagePerSide + fullSlidesHorizontalOffset * fakeImagePerSide
+  const initialOffset =
+    slideWidth * fakeImagePerSide + fullSlidesHorizontalOffset * fakeImagePerSide
   // shows real offset
   const scrolling = useRef(new Animated.Value(initialOffset))
 
@@ -101,14 +118,18 @@ export const Carousel = (props: Props) => {
   const isDrag = useRef<boolean>(false)
   const ref = useRef<ScrollView>(null)
 
+  useLayoutEffect(() => {
+    setScrollViewRef(ref)
+  }, [ref, setScrollViewRef])
+
   // help to avoid style blinking when go from fake items to real
   const [hiddenIndexScrolling, setHiddenIndexScrolling] = useState<undefined | number>(undefined)
 
-  const [list] = useState(generateFakeItems(sliders, fakeImagePerSide))
+  const [list] = useState(generateFakeItems(images, fakeImagePerSide))
 
   const { dotsStyles } = useScrollDotsInterpolatedStyles({
-    slidesCount: sliders.length,
-    slideWidth: itemWidth + fullSlidesHorizontalOffset,
+    slidesCount: images.length,
+    slideWidth: slideWidth + fullSlidesHorizontalOffset,
     scrollEvent: scrolling.current,
     fakeImagePerSide: fakeImagePerSide,
     type: dotsAnimationType,
@@ -117,7 +138,7 @@ export const Carousel = (props: Props) => {
 
   const { imageStyles } = useScrollImageInterpolatedStyles({
     list: list,
-    slideWidth: itemWidth + fullSlidesHorizontalOffset,
+    slideWidth: slideWidth + fullSlidesHorizontalOffset,
     scrollEvent: scrolling.current,
     hiddenIndexScrolling: hiddenIndexScrolling,
     animationType: animationType,
@@ -136,20 +157,20 @@ export const Carousel = (props: Props) => {
 
     const x =
       nativeEvent.contentOffset.x -
-      (itemWidth + fullSlidesHorizontalOffset) * fakeImagePerSide +
+      (slideWidth + fullSlidesHorizontalOffset) * fakeImagePerSide +
       slideHorizontalOffset
-    const index = Math.round(x / (itemWidth + fullSlidesHorizontalOffset))
+    const index = Math.round(x / (slideWidth + fullSlidesHorizontalOffset))
 
     // scroll to start
-    if (index > sliders.length - 1) {
+    if (index > images.length - 1) {
       // FAKE_PER_SIDE - simple way, bu we handle case when user can swipe 2 and more items per one swipe, and navigate to real position
-      const toIndex = fakeImagePerSide + index - sliders.length
+      const toIndex = fakeImagePerSide + index - images.length
       hiddenScrollToIndex(toIndex)
     }
 
     // scroll to end
     if (index <= -1) {
-      const toIndex = sliders.length + index + fakeImagePerSide
+      const toIndex = images.length + index + fakeImagePerSide
       hiddenScrollToIndex(toIndex)
     }
   }
@@ -159,7 +180,7 @@ export const Carousel = (props: Props) => {
     setHiddenIndexScrolling(toIndex)
 
     ref.current?.scrollTo({
-      x: itemWidth * toIndex + toIndex * fullSlidesHorizontalOffset,
+      x: slideWidth * toIndex + toIndex * fullSlidesHorizontalOffset,
       y: 0,
       animated: false,
     })
@@ -185,10 +206,10 @@ export const Carousel = (props: Props) => {
         intervalId.current = setInterval(() => {
           const x =
             scrolling.current._value -
-            (itemWidth + fullSlidesHorizontalOffset) * fakeImagePerSide +
+            (slideWidth + fullSlidesHorizontalOffset) * fakeImagePerSide +
             slideHorizontalOffset
-          const index = Math.round(x / (itemWidth + fullSlidesHorizontalOffset)) + 1
-          const offset = itemWidth * (index + fakeImagePerSide) + (index + fakeImagePerSide) * 20
+          const index = Math.round(x / (slideWidth + fullSlidesHorizontalOffset)) + 1
+          const offset = slideWidth * (index + fakeImagePerSide) + (index + fakeImagePerSide) * 20
           // sync drag and autoscroll value
           scrollViewOffset.setValue(scrolling.current._value)
           Animated.timing(scrollViewOffset, {
@@ -202,7 +223,7 @@ export const Carousel = (props: Props) => {
     [
       isAutoScroll,
       autoScrollSlideInterval,
-      itemWidth,
+      slideWidth,
       fullSlidesHorizontalOffset,
       fakeImagePerSide,
       slideHorizontalOffset,
@@ -218,7 +239,7 @@ export const Carousel = (props: Props) => {
     scrollViewOffset.setValue(scrolling.current._value)
 
     Animated.timing(scrollViewOffset, {
-      toValue: itemWidth * toIndex + toIndex * fullSlidesHorizontalOffset,
+      toValue: slideWidth * toIndex + toIndex * fullSlidesHorizontalOffset,
       duration: animationDuration,
       useNativeDriver: true,
     }).start()
@@ -233,12 +254,12 @@ export const Carousel = (props: Props) => {
     if (Platform.OS === 'ios') {
       const x =
         e.nativeEvent.contentOffset.x -
-        (itemWidth + fullSlidesHorizontalOffset) * fakeImagePerSide +
+        (slideWidth + fullSlidesHorizontalOffset) * fakeImagePerSide +
         slideHorizontalOffset
-      const index = Math.round(x / (itemWidth + fullSlidesHorizontalOffset))
+      const index = Math.round(x / (slideWidth + fullSlidesHorizontalOffset))
 
       // forbid scroll when user fast scroll to last item
-      if (index < 0 || index >= sliders.length) {
+      if (index < 0 || index >= images.length) {
         ref.current?.setNativeProps({
           scrollEnabled: false,
         })
@@ -294,19 +315,28 @@ export const Carousel = (props: Props) => {
 
   const horizontalMargin = useMemo(() => {
     if (sliderPosition === 'center') {
-      const w = itemWidth + slideHorizontalOffset * 2
-      const restPart = containerWidth % w
+      if (currentContainerWidth === undefined) return 0
+      const w = slideWidth + slideHorizontalOffset * 2
+      const restPart = currentContainerWidth % w
       return restPart / 2 + slideHorizontalOffset
     }
 
     if (sliderPosition === 'left') return 0
 
     return sliderPosition
-  }, [sliderPosition, itemWidth, containerWidth, slideHorizontalOffset])
+  }, [sliderPosition, slideWidth, slideHorizontalOffset, currentContainerWidth])
+
+  const sliderStyle = sliderStyles ?? [styles.sliderWrapper, styles.shadow]
+  const imageStyle = sliderImageStyles ?? { width: slideWidth, height: '100%', borderRadius: 20 }
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, { opacity: !currentContainerWidth ? 0 : 1 }]}>
       <View>
         <ScrollView
+          onLayout={(e) => {
+            if (!currentContainerWidth) {
+              setCurrentContainerWidth(e.nativeEvent.layout.width)
+            }
+          }}
           contentContainerStyle={styles.scrollContainer}
           bounces={false}
           contentOffset={{
@@ -317,7 +347,7 @@ export const Carousel = (props: Props) => {
           disableIntervalMomentum
           scrollEventThrottle={16}
           disableScrollViewPanResponder
-          snapToInterval={itemWidth + fullSlidesHorizontalOffset}
+          snapToInterval={slideWidth + fullSlidesHorizontalOffset}
           decelerationRate='fast'
           ref={ref}
           showsHorizontalScrollIndicator={false}
@@ -330,10 +360,9 @@ export const Carousel = (props: Props) => {
           {imageStyles.map(({ style, image }, i) => (
             <Animated.View
               style={[
-                styles.sliderWrapper,
-                styles.shadow,
+                sliderStyle,
                 {
-                  width: itemWidth,
+                  width: slideWidth,
                   marginRight: i === list.length - 1 ? horizontalMargin : slideHorizontalOffset,
                   marginLeft: i === 0 ? horizontalMargin : slideHorizontalOffset,
                 },
@@ -341,21 +370,22 @@ export const Carousel = (props: Props) => {
               ]}
               key={image.id}
             >
-              <Image
-                source={image.image}
-                style={{ width: itemWidth, height: '100%', borderRadius: 20 }}
-              />
+              <Image source={image.image} style={imageStyle} {...imageProps} />
             </Animated.View>
           ))}
         </ScrollView>
       </View>
-      <View style={styles.dotsContainer}>
-        {dotsStyles.map((dotStyle, index) => (
-          <TouchableOpacity key={`sliderDots${index}`} onPress={scrollToIndex(index)}>
-            <Animated.View style={[styles.dot, dotStyle]} />
-          </TouchableOpacity>
-        ))}
-      </View>
+      {customDots ? (
+        customDots(dotsStyles, scrollToIndex)
+      ) : (
+        <View style={styles.dotsContainer}>
+          {dotsStyles.map((dotStyle, index) => (
+            <TouchableOpacity key={`sliderDots${index}`} onPress={scrollToIndex(index)}>
+              <Animated.View style={[styles.dot, dotStyle]} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
     </View>
   )
 }

@@ -1,5 +1,5 @@
-import React from 'react'
-import { SafeAreaView, View } from 'react-native'
+import React, { useRef } from 'react'
+import { Animated, SafeAreaView, ScrollView, TouchableOpacity, View } from 'react-native'
 import { Carousel, SliderItem } from './src/Carousel'
 import { SLIDER_ANIMATION_TYPE } from './src/useScrollImageInterpolatedStyles'
 import { DOTS_ANIMATION } from './src/useScrollDotsInterpolatedStyles'
@@ -16,51 +16,55 @@ const initialList: SliderItem[] = [
     },
   },
 ]
-
-const W = 390
+const CONTAINER_WIDTH = 350
 // const W = 130 + 20 + 130 + 20 + 80
 // const W = 110 + 20 + 110 + 20 + 120
 const App = () => {
+  const ref = useRef<ScrollView>(null)
+
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View
         style={{
           flex: 1,
-          width: W,
+          // width: CONTAINER_WIDTH,
           backgroundColor: 'red',
           alignSelf: 'center',
         }}
       >
         <Carousel
           fakeImagePerSide={3}
-          sliders={initialList}
-          slideHorizontalOffset={15}
-          containerWidth={W}
-          itemWidth={200}
+          images={initialList}
+          slideHorizontalOffset={10}
+          // containerWidth={W}
+          slideWidth={100}
           sliderPosition={'center'}
-          // animationType={SLIDER_ANIMATION_TYPE.THREE}
+          animationType={SLIDER_ANIMATION_TYPE.NO_EFFECTS}
           dotsAnimation={DOTS_ANIMATION.SCALE}
-          customSlideAnimation={() => ({})}
-          // customSlideAnimation={(hiddenIndexScrolling, i, interpolate) => ({
-          //   opacity:
-          //     hiddenIndexScrolling && hiddenIndexScrolling === i ? 0.99 : interpolate(i, 0.2, 1), // TODO add description to interpolate
-          //   transform: [
-          //     {
-          //       translateY:
-          //         hiddenIndexScrolling && hiddenIndexScrolling === i
-          //           ? -24.99
-          //           : interpolate(i, 0, -25),
-          //     },
-          //   ],
-          // })}
-          customDotsAnimation={(i, interpolate) => ({
-            transform: [
-              {
-                scale: interpolate(i, 1, 2),
-              },
-            ],
-            // opacity: interpolate(i, 0.4, 1),
-          })}
+          setScrollViewRef={(r) => {
+            ref.current = r
+          }}
+          sliderStyles={{ height: 100, backgroundColor: 'white', paddingHorizontal: 10 }}
+          imageProps={{ resizeMode: 'cover' }}
+          sliderImageStyles={{ borderRadius: 20, width: '100%', height: '100%' }}
+          customDots={(dotsStyles, scrollToIndex) => (
+            <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+              {dotsStyles.map((dotStyle, index) => (
+                // <TouchableOpacity
+                //   key={`sliderDots${index}`}
+                //   onPress={() => console.log('ref?.current: ', ref?.current)}
+                // >
+                <TouchableOpacity key={`sliderDots${index}`} onPress={scrollToIndex(index)}>
+                  <Animated.View
+                    style={[
+                      dotStyle,
+                      { width: 10, height: 10, backgroundColor: 'green', marginHorizontal: 10 },
+                    ]}
+                  />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         />
       </View>
     </SafeAreaView>

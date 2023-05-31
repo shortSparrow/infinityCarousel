@@ -20,6 +20,7 @@ export enum SLIDER_ANIMATION_TYPE {
   TWO,
   THREE,
   FOUR,
+  NO_EFFECTS,
 }
 
 const getAnimatedStyle = (
@@ -81,17 +82,11 @@ const getAnimatedStyle = (
           },
         ],
       }
-    // default return ONE type
+    case SLIDER_ANIMATION_TYPE.NO_EFFECTS:
+      return {}
+    // default return NO_EFFECTS type
     default:
-      return {
-        opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 0.99 : interpolate(i, 0.2, 1),
-        transform: [
-          {
-            translateY:
-              hiddenIndexScrolling && hiddenIndexScrolling === i ? -24.99 : interpolate(i, 0, -25),
-          },
-        ],
-      }
+      return {}
   }
 }
 
