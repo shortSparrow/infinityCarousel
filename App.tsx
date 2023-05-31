@@ -1,8 +1,8 @@
 import React, { useRef } from 'react'
 import { Animated, SafeAreaView, ScrollView, TouchableOpacity, View } from 'react-native'
 import { Carousel, SliderItem } from './src/Carousel'
-import { SLIDER_ANIMATION_TYPE as SLIDE_ANIMATION_TYPE } from './src/useScrollImageInterpolatedStyles'
-import { DOTS_ANIMATION as DOTS_ANIMATION_TYPE } from './src/useScrollDotsInterpolatedStyles'
+import { SLIDER_ANIMATION_TYPE as SLIDE_ANIMATION_TYPE } from './src/hooks/useScrollImageInterpolatedStyles'
+import { DOTS_ANIMATION_TYPE as DOTS_ANIMATION_TYPE } from './src/hooks/useScrollDotsInterpolatedStyles'
 
 const initialList: SliderItem[] = [
   { id: '1', image: require('./src/image/1.jpeg') },

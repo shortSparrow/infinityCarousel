@@ -16,12 +16,15 @@ import {
   ImageProps,
 } from 'react-native'
 import { debounce } from 'lodash'
-import { DOTS_ANIMATION, useScrollDotsInterpolatedStyles } from './useScrollDotsInterpolatedStyles'
+import {
+  DOTS_ANIMATION_TYPE,
+  useScrollDotsInterpolatedStyles,
+} from './hooks/useScrollDotsInterpolatedStyles'
 import {
   SLIDER_ANIMATION_TYPE,
   useScrollImageInterpolatedStyles,
-} from './useScrollImageInterpolatedStyles'
-import { generateFakeItems } from './helpers/generateFakeItems'
+} from './hooks/useScrollImageInterpolatedStyles'
+import { generateFakeItems } from './utils/generateFakeItems'
 import { styles } from './Carousel.style'
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window')
@@ -40,13 +43,12 @@ type Props = ScrollViewProps & {
   isAutoScroll?: boolean
   autoScrollSlideInterval?: number
   autoScrollSlideInteractionDelay?: number
-  offsetBetweenEachSLider?: number
   slideHorizontalOffset?: number
   slideAnimationType?: SLIDER_ANIMATION_TYPE
   animationDuration?: number
   slideAlign?: 'center' | 'left' | number
   containerWidth?: number
-  dotsAnimationType?: DOTS_ANIMATION
+  dotsAnimationType?: DOTS_ANIMATION_TYPE
   scrollViewRef?: React.RefObject<ScrollView>
 
   customSlideAnimation?: (
@@ -90,7 +92,7 @@ export const Carousel = (props: Props) => {
     animationDuration = DEFAULT_ANIMATION_DURATION,
     slideAlign = 'center',
     containerWidth,
-    dotsAnimationType = DOTS_ANIMATION.SCALE_WITH_OPACITY,
+    dotsAnimationType = DOTS_ANIMATION_TYPE.SCALE_WITH_OPACITY,
     onScroll,
     onMomentumScrollEnd,
     onScrollEndDrag,
@@ -120,15 +122,14 @@ export const Carousel = (props: Props) => {
   const isScrolling = useRef(false)
   const isDrag = useRef<boolean>(false)
   const ref = useRef<ScrollView>(null)
-
-  useLayoutEffect(() => {
-    setScrollViewRef && setScrollViewRef(ref)
-  }, [ref, setScrollViewRef])
-
   // help to avoid style blinking when go from fake items to real
   const [hiddenIndexScrolling, setHiddenIndexScrolling] = useState<undefined | number>(undefined)
 
   const [list] = useState(generateFakeItems(images, fakeImagePerSide))
+
+  useLayoutEffect(() => {
+    setScrollViewRef && setScrollViewRef(ref)
+  }, [ref, setScrollViewRef])
 
   const { animatedDotsStyles } = useScrollDotsInterpolatedStyles({
     slidesCount: images.length,
