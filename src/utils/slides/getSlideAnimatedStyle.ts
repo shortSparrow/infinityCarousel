@@ -1,13 +1,13 @@
-import { SLIDER_ANIMATION_TYPE } from '../../hooks/useScrollSlideInterpolatedStyles'
+import { SLIDE_ANIMATION_TYPE } from '../../hooks/useScrollSlideInterpolatedStyles'
 
 export const getSlideAnimatedStyle = (
   hiddenIndexScrolling: undefined | number,
   i: number,
   interpolate: (slideItemIndex: number, minValue: number, maxValue: number) => any,
-  type: SLIDER_ANIMATION_TYPE
+  type: SLIDE_ANIMATION_TYPE
 ) => {
   switch (type) {
-    case SLIDER_ANIMATION_TYPE.MOVE_UP:
+    case SLIDE_ANIMATION_TYPE.MOVE_UP:
       return {
         opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 0.99 : interpolate(i, 0.2, 1),
         transform: [
@@ -17,7 +17,7 @@ export const getSlideAnimatedStyle = (
           },
         ],
       }
-    case SLIDER_ANIMATION_TYPE.SCALE:
+    case SLIDE_ANIMATION_TYPE.SCALE:
       return {
         transform: [
           {
@@ -25,7 +25,7 @@ export const getSlideAnimatedStyle = (
           },
         ],
       }
-    case SLIDER_ANIMATION_TYPE.ROLLING:
+    case SLIDE_ANIMATION_TYPE.ROLLING:
       return {
         opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 1 : interpolate(i, 0.6, 1),
         transform: [
@@ -38,7 +38,7 @@ export const getSlideAnimatedStyle = (
         ],
         zIndex: interpolate(i, 0, 1),
       }
-    case SLIDER_ANIMATION_TYPE.SQUEEZE_ANDROID:
+    case SLIDE_ANIMATION_TYPE.SQUEEZE_ANDROID:
       return {
         transform: [
           {
@@ -55,7 +55,7 @@ export const getSlideAnimatedStyle = (
           },
         ],
       }
-    case SLIDER_ANIMATION_TYPE.SQUEEZE_MOVE_UP_IOS:
+    case SLIDE_ANIMATION_TYPE.SQUEEZE_MOVE_UP_IOS:
       return {
         transform: [
           {
@@ -66,7 +66,7 @@ export const getSlideAnimatedStyle = (
           },
         ],
       }
-    case SLIDER_ANIMATION_TYPE.NO_EFFECTS:
+    case SLIDE_ANIMATION_TYPE.NO_EFFECTS:
       return {}
 
     default:

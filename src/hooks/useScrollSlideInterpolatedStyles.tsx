@@ -2,7 +2,7 @@ import { Animated, ViewStyle } from 'react-native'
 import { getSlideInterpolator } from '../utils/slides/getSlideInterpolator'
 import { getSlideAnimatedStyle } from '../utils/slides/getSlideAnimatedStyle'
 
-export enum SLIDER_ANIMATION_TYPE {
+export enum SLIDE_ANIMATION_TYPE {
   MOVE_UP,
   SCALE,
   ROLLING,
@@ -19,7 +19,7 @@ type UseScrollSlideInterpolatedStyles = {
   slideWidthWithOffset: number
   scrollEvent: Animated.Value
   hiddenIndexScrolling: undefined | number
-  slideAnimationType?: SLIDER_ANIMATION_TYPE
+  slideAnimationType?: SLIDE_ANIMATION_TYPE
   customSlideAnimation?: (
     hiddenIndexScrolling: undefined | number,
     i: number,
@@ -32,7 +32,7 @@ export const useScrollSlideInterpolatedStyles = ({
   slideWidthWithOffset,
   scrollEvent,
   hiddenIndexScrolling,
-  slideAnimationType = SLIDER_ANIMATION_TYPE.MOVE_UP,
+  slideAnimationType = SLIDE_ANIMATION_TYPE.MOVE_UP,
   customSlideAnimation,
 }: UseScrollSlideInterpolatedStyles) => {
   const slidesCount = list.length

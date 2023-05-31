@@ -21,7 +21,7 @@ import {
   useScrollDotsInterpolatedStyles,
 } from './hooks/useScrollDotsInterpolatedStyles'
 import {
-  SLIDER_ANIMATION_TYPE,
+  SLIDE_ANIMATION_TYPE,
   useScrollSlideInterpolatedStyles,
 } from './hooks/useScrollSlideInterpolatedStyles'
 import { generateFakeItems } from './utils/generateFakeItems'
@@ -44,7 +44,7 @@ type Props = ScrollViewProps & {
   autoScrollSlideInterval?: number
   autoScrollSlideInteractionDelay?: number
   slideHorizontalOffset?: number
-  slideAnimationType?: SLIDER_ANIMATION_TYPE
+  slideAnimationType?: SLIDE_ANIMATION_TYPE
   animationDuration?: number
   slideAlign?: 'center' | 'left' | number
   containerWidth?: number
@@ -352,7 +352,7 @@ export const Carousel = (props: Props) => {
           onScroll={_onScroll}
           contentContainerStyle={{
             marginLeft: horizontalMargin,
-            paddingTop: slideAnimationType === SLIDER_ANIMATION_TYPE.MOVE_UP ? 25 : 0,
+            paddingTop: slideAnimationType === SLIDE_ANIMATION_TYPE.MOVE_UP ? 25 : 0,
           }}
           {...rest}
         >
