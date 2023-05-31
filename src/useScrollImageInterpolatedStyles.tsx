@@ -1,4 +1,4 @@
-import { Animated, Easing } from 'react-native'
+import { Animated, Easing, ViewStyle } from 'react-native'
 
 export const getImageInterpolator =
   (animatedValue: Animated.Value, slideWidth: number) =>
@@ -112,7 +112,7 @@ type UseScrollImageInterpolatedStyles = {
       minValue: number,
       maxValue: number
     ) => Animated.AnimatedInterpolation
-  ) => void
+  ) => ViewStyle
 }
 
 export const useScrollImageInterpolatedStyles = ({

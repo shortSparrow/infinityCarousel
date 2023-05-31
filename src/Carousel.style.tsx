@@ -9,10 +9,10 @@ export const styles = StyleSheet.create({
     paddingBottom: 50,
   },
   sliderWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    // alignItems: 'center',
+    // justifyContent: 'center',
     // width: itemWidth,
-    height: 300,
+    height: 300, // TODO
     borderRadius: 20,
   },
   shadow: {
@@ -25,7 +25,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 6.68,
     elevation: 11,
   },
-  slider: {},
+  slider: {}, // TODO
   dotsContainer: {
     flexDirection: 'row',
     justifyContent: 'center',

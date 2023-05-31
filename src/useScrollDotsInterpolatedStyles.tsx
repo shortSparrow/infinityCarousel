@@ -1,5 +1,4 @@
 import { Animated } from 'react-native'
-// import { FAKE_PER_SIDE } from './Carousel'
 
 const getInterpolator =
   (
@@ -91,24 +90,93 @@ const getInterpolator =
     }
   }
 
-export const useScrollDotsInterpolatedStyles = (
-  slidesCount: number,
-  slideWidth: number,
-  scrollEvent: Animated.Value,
-  fakeImagePerSide: number
+export enum DOTS_ANIMATION {
+  SCALE_WITH_OPACITY,
+  SCALE,
+  MOVE_UP,
+}
+
+const getAnimatedStyle = (
+  i: number,
+  interpolate: (
+    slideItemIndex: number,
+    minValue: number,
+    maxValue: number
+  ) => Animated.AnimatedInterpolation,
+  type: DOTS_ANIMATION
 ) => {
+  switch (type) {
+    case DOTS_ANIMATION.SCALE_WITH_OPACITY:
+      return {
+        transform: [
+          {
+            scale: interpolate(i, 1, 1.2),
+          },
+        ],
+        opacity: interpolate(i, 0.4, 1),
+      }
+
+    case DOTS_ANIMATION.SCALE:
+      return {
+        transform: [
+          {
+            scale: interpolate(i, 1, 1.4),
+          },
+        ],
+      }
+    case DOTS_ANIMATION.MOVE_UP:
+      return {
+        transform: [
+          {
+            translateY: interpolate(i, 1, -15),
+          },
+        ],
+      }
+
+    default:
+      return {
+        transform: [
+          {
+            scale: interpolate(i, 1, 1.2),
+          },
+        ],
+        opacity: interpolate(i, 0.4, 1),
+      }
+  }
+}
+
+type UseScrollDotsInterpolatedStyles = {
+  slidesCount: number
+  slideWidth: number
+  scrollEvent: Animated.Value
+  fakeImagePerSide: number
+  type: DOTS_ANIMATION
+  customDotsAnimation?: (
+    i: number,
+    interpolate: (
+      slideItemIndex: number,
+      minValue: number,
+      maxValue: number
+    ) => Animated.AnimatedInterpolation
+  ) => any
+}
+export const useScrollDotsInterpolatedStyles = ({
+  slidesCount,
+  slideWidth,
+  scrollEvent,
+  fakeImagePerSide,
+  type = DOTS_ANIMATION.SCALE_WITH_OPACITY,
+  customDotsAnimation,
+}: UseScrollDotsInterpolatedStyles) => {
   const dotsStyles = Array<any>(slidesCount)
 
   const interpolate = getInterpolator(scrollEvent, slideWidth, slidesCount, fakeImagePerSide)
 
   for (let i = fakeImagePerSide; i < slidesCount + fakeImagePerSide; i += 1) {
     dotsStyles[i] = {
-      transform: [
-        {
-          scale: interpolate(i, 1, 1.2),
-        },
-      ],
-      opacity: interpolate(i, 0.4, 1),
+      ...(customDotsAnimation
+        ? customDotsAnimation(i, interpolate)
+        : getAnimatedStyle(i, interpolate, type)),
     }
   }
 
