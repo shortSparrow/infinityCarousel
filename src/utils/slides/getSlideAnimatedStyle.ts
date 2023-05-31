@@ -1,5 +1,5 @@
 import { Animated } from 'react-native'
-import { SLIDER_ANIMATION_TYPE } from '../../hooks/useScrollImageInterpolatedStyles'
+import { SLIDER_ANIMATION_TYPE } from '../../hooks/useScrollSlideInterpolatedStyles'
 
 export const getSlideAnimatedStyle = (
   hiddenIndexScrolling: undefined | number,
@@ -12,7 +12,7 @@ export const getSlideAnimatedStyle = (
   type: SLIDER_ANIMATION_TYPE
 ) => {
   switch (type) {
-    case SLIDER_ANIMATION_TYPE.ONE:
+    case SLIDER_ANIMATION_TYPE.MOVE_UP:
       return {
         opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 0.99 : interpolate(i, 0.2, 1),
         transform: [
@@ -22,7 +22,7 @@ export const getSlideAnimatedStyle = (
           },
         ],
       }
-    case SLIDER_ANIMATION_TYPE.TWO:
+    case SLIDER_ANIMATION_TYPE.SCALE:
       return {
         transform: [
           {
@@ -30,7 +30,7 @@ export const getSlideAnimatedStyle = (
           },
         ],
       }
-    case SLIDER_ANIMATION_TYPE.THREE:
+    case SLIDER_ANIMATION_TYPE.ROLLING:
       return {
         opacity: hiddenIndexScrolling && hiddenIndexScrolling === i ? 1 : interpolate(i, 0.6, 1),
         transform: [
@@ -43,7 +43,7 @@ export const getSlideAnimatedStyle = (
         ],
         zIndex: interpolate(i, 0, 1),
       }
-    case SLIDER_ANIMATION_TYPE.FOUR:
+    case SLIDER_ANIMATION_TYPE.SQUEEZE_ANDROID:
       return {
         transform: [
           {
@@ -60,9 +60,20 @@ export const getSlideAnimatedStyle = (
           },
         ],
       }
+    case SLIDER_ANIMATION_TYPE.SQUEEZE_MOVE_UP_IOS:
+      return {
+        transform: [
+          {
+            skewY:
+              hiddenIndexScrolling && hiddenIndexScrolling === i
+                ? '0deg'
+                : interpolate(i, '-45deg', '0deg'),
+          },
+        ],
+      }
     case SLIDER_ANIMATION_TYPE.NO_EFFECTS:
       return {}
-    // default return NO_EFFECTS type
+
     default:
       return {}
   }

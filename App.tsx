@@ -1,10 +1,10 @@
 import React, { useRef } from 'react'
-import { Animated, SafeAreaView, ScrollView, TouchableOpacity, View } from 'react-native'
-import { Carousel, SliderItem } from './src/Carousel'
-import { SLIDER_ANIMATION_TYPE as SLIDE_ANIMATION_TYPE } from './src/hooks/useScrollImageInterpolatedStyles'
+import { SafeAreaView, ScrollView, View } from 'react-native'
+import { Carousel, SlideItem } from './src/Carousel'
+import { SLIDER_ANIMATION_TYPE as SLIDE_ANIMATION_TYPE } from './src/hooks/useScrollSlideInterpolatedStyles'
 import { DOTS_ANIMATION_TYPE as DOTS_ANIMATION_TYPE } from './src/hooks/useScrollDotsInterpolatedStyles'
 
-const initialList: SliderItem[] = [
+const initialList: SlideItem[] = [
   { id: '1', image: require('./src/image/1.jpeg') },
   { id: '2', image: require('./src/image/2.webp') },
   { id: '3', image: require('./src/image/3.jpeg') },
@@ -17,8 +17,7 @@ const initialList: SliderItem[] = [
   },
 ]
 const CONTAINER_WIDTH = 350
-// const W = 130 + 20 + 130 + 20 + 80
-// const W = 110 + 20 + 110 + 20 + 120
+
 const App = () => {
   const ref = useRef<ScrollView>(null)
 
@@ -28,18 +27,20 @@ const App = () => {
         style={{
           flex: 1,
           // width: CONTAINER_WIDTH,
+          // width: 300,
           backgroundColor: 'red',
           alignSelf: 'center',
         }}
       >
         <Carousel
           // containerWidth={CONTAINER_WIDTH}
+          isAutoScroll={false}
           fakeImagePerSide={3}
           images={initialList}
           slideHorizontalOffset={10}
           slideWidth={100}
           slideAlign='center'
-          slideAnimationType={SLIDE_ANIMATION_TYPE.NO_EFFECTS}
+          slideAnimationType={SLIDE_ANIMATION_TYPE.MOVE_UP}
           dotsAnimationType={DOTS_ANIMATION_TYPE.SCALE}
           setScrollViewRef={(r) => {
             ref.current = r
@@ -57,7 +58,7 @@ const App = () => {
           //       //   key={`sliderDots${index}`}
           //       //   onPress={() => console.log('ref?.current: ', ref?.current)}
           //       // >
-          //       <TouchableOpacity key={`sliderDots${index}`} onPress={scrollToIndex(index)}>
+          //       <TouchableOpacity key={`sliderDots${index}`} onPress={() => scrollToIndex(index)}>
           //         <Animated.View
           //           style={[
           //             dotStyle,

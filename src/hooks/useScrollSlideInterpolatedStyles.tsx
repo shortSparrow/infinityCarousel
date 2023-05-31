@@ -3,14 +3,15 @@ import { getSlideInterpolator } from '../utils/slides/getSlideInterpolator'
 import { getSlideAnimatedStyle } from '../utils/slides/getSlideAnimatedStyle'
 
 export enum SLIDER_ANIMATION_TYPE {
-  ONE,
-  TWO,
-  THREE,
-  FOUR,
+  MOVE_UP,
+  SCALE,
+  ROLLING,
+  SQUEEZE_ANDROID,
+  SQUEEZE_MOVE_UP_IOS,
   NO_EFFECTS,
 }
 
-type UseScrollImageInterpolatedStyles = {
+type UseScrollSlideInterpolatedStyles = {
   list: {
     id: string
     image: any
@@ -30,14 +31,14 @@ type UseScrollImageInterpolatedStyles = {
   ) => ViewStyle
 }
 
-export const useScrollImageInterpolatedStyles = ({
+export const useScrollSlideInterpolatedStyles = ({
   list,
   slideWidthWithOffset,
   scrollEvent,
   hiddenIndexScrolling,
-  slideAnimationType = SLIDER_ANIMATION_TYPE.ONE,
+  slideAnimationType = SLIDER_ANIMATION_TYPE.MOVE_UP,
   customSlideAnimation,
-}: UseScrollImageInterpolatedStyles) => {
+}: UseScrollSlideInterpolatedStyles) => {
   const slidesCount = list.length
   const animatedImageStyles = Array(slidesCount)
 
